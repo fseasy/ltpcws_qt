@@ -13,6 +13,9 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        widget.cpp
+        widget.cpp \
+    config.cpp
 
-HEADERS  += widget.h
+HEADERS  += widget.h \
+    config.h
+CONFIG += c++11
