@@ -14,11 +14,14 @@
 #include <QLineEdit>
 #include <QFileDialog>
 #include <QPlainTexTEdit>
+#include <QScrollBar>
 #include <QSpacerItem>
 
+#include <QProcess>
 #include <QtDebug>
 #include <functional>
 #include "config.h"
+
 class Widget : public QWidget
 {
     Q_OBJECT
@@ -55,8 +58,10 @@ private :
     QStackedWidget *stackedWidget ;
 
     // Logic state
-
+    bool checkReadPathValid(QString path) ;
+    bool checkWritePathValid(QString path) ;
     Config config ;
+    QProcess * trainProcess ;
     TrainMode trainMode ;
     TestMode testMode ;
 

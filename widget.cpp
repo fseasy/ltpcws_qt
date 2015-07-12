@@ -51,11 +51,11 @@ void Widget::createTrainWidget()
     //  train model
     QGroupBox * trainModelBox = new QGroupBox(tr("训练模型选择")) ;
     //trainModelBox->setFlat(true) ;
-    QButtonGroup *trainBtnGroup = new QButtonGroup() ;
+    QButtonGroup *trainModeBtnGroup = new QButtonGroup() ;
     QRadioButton * basicRadio = new QRadioButton(tr("基础模型训练") , trainWidget) ;
     QRadioButton * customRadio = new QRadioButton(tr("个性化模型训练") , trainWidget) ;
-    trainBtnGroup->addButton(basicRadio) ;
-    trainBtnGroup->addButton(customRadio) ;
+    trainModeBtnGroup->addButton(basicRadio) ;
+    trainModeBtnGroup->addButton(customRadio) ;
     QLabel * trainModelInfo = new QLabel() ;
     trainModelInfo->setText(config.basicModelIntro) ;
     trainModelInfo->setWordWrap(true) ;
@@ -92,6 +92,8 @@ void Widget::createTrainWidget()
     trainLayout->setRowMinimumHeight(8,40) ;
     // Train Log
     trainEditLog = new QPlainTextEdit() ;
+    trainEditLog->setReadOnly(true) ;
+    trainEditLog->setFont(QFont("consolas",10)) ;
     QGroupBox * logBox = new QGroupBox(tr("训练日志输出")) ;
     QGridLayout *logLayout = new QGridLayout ;
     logLayout->addWidget(trainEditLog , 0 ,0  ) ;
@@ -113,8 +115,66 @@ void Widget::createTrainWidget()
          trainMode = CustomTrainMode ;
       }
     } ;
-    connect(trainBtnGroup , static_cast<void(QButtonGroup::*)(QAbstractButton *)>(&QButtonGroup::buttonClicked) ,
+    connect(trainModeBtnGroup , static_cast<void(QButtonGroup::*)(QAbstractButton *)>(&QButtonGroup::buttonClicked) ,
             radioSwitchHandler) ;
+    // Bind action for train btn
+    connect(trainBtn , QPushButton::clicked , [=]()
+    {
+        bool isCustomMode = trainMode == CustomTrainMode ? true : false ;
+        bool checkPathState = checkReadPathValid(trainPathEditTrain->text())
+                              && checkReadPathValid(trainPathEditDev->text())
+                              && checkWritePathValid(trainPathEditModelSaving->text()) ;
+        if(isCustomMode){checkPathState = checkPathState && checkReadPathValid(trainPathEditBasicModel->text());}
+        if(!checkPathState)
+        {
+            QMessageBox::information(this , tr("路径设置错误") ,
+                                     tr("路径检查错误！请检查路径配置是否正确。然后重现点击按钮。")) ;
+            return ;
+        }
+        bool confSavingState = config.saveTrainConfigAndSetState(isCustomMode , trainPathEditTrain->text() , trainPathEditDev->text() ,
+                               trainPathEditModelSaving->text() , trainMaxIte->text() ,
+                               trainPathEditBasicModel->text()) ;
+        qDebug() << ( confSavingState ? "trainning config saving ok" : "trainning config saving failed" );
+        if(!confSavingState)
+        {
+            QMessageBox::information(this , tr("内部错误") ,
+                                     tr("内部训练配置文件写入错误！")) ;
+            return ;
+        }
+
+        // Start Train
+        if(!config.getCwsExeState())
+        {
+            QMessageBox::information(this , tr("内部错误") ,
+                                     tr("未找到适合该操作系统的分词程序\n请下载源代码编译后放在cws_bin/others目录下")) ;
+            return ;
+        }
+        QStringList param ;
+        param << config.getCurrentTrainConf() ;
+        trainProcess = new QProcess(this) ;
+        connect(trainProcess , QProcess::started , [=]()
+        {
+            qDebug() << "process started" ;
+            trainBtn->setDisabled(true) ;
+        }) ;
+        connect(trainProcess , QProcess::readyReadStandardError , [=]()
+        {
+            QString readedLog =  trainProcess->readAllStandardError().trimmed() ;
+            qDebug() << readedLog ;
+            trainEditLog->appendPlainText(readedLog);
+            //trainEditLog->verticalScrollBar()->setValue(trainEditLog.verticalScrollBar()->maximum());
+
+        }) ;
+        connect(trainProcess , static_cast<void(QProcess::*)(int , QProcess::ExitStatus)>(&QProcess::finished) , [=](int exitCode, QProcess::ExitStatus exitStatus)
+        {
+            trainBtn->setEnabled(true) ;
+            qDebug() << "exitCode" << exitCode
+                     << exitStatus ;
+        }) ;
+        trainProcess->start(config.getCurrentCwsExePath() , param) ;
+
+
+    }) ;
     // Init state
     trainMode = CustomTrainMode ;
     customRadio->setChecked(true) ;
@@ -191,6 +251,15 @@ void Widget::setLayoutItemsEnabled(QLayout *layout,bool enable)
     {
         layout->itemAt(i)->widget()->setEnabled(enable) ;
     }
+}
+bool Widget::checkReadPathValid(QString path)
+{
+    return true ;
+}
+
+bool Widget::checkWritePathValid(QString path)
+{
+    return true ;
 }
 
 Widget::~Widget()

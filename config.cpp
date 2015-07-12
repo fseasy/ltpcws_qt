@@ -2,8 +2,10 @@
 
 Config::Config()
 {
-    //QString exePath = QCoreApplication::applicationDirPath() ;
-    QString exePath = QDir::currentPath() ;
+    QString exePath = QCoreApplication::applicationDirPath() ; /* This can ensure the path as the exe path*/
+    //QString exePath = QDir::currentPath() ;
+
+    // Config init
     QString dirName = "conf" ;
     baseDir = QDir(exePath + "/" + dirName) ; // Always use '/' as separator
     if(!baseDir.exists())
@@ -15,19 +17,58 @@ Config::Config()
     basicTestConfPath = baseDir.absolutePath() + "/" + "basic_test_conf.conf" ;
     customTrainConfPath = baseDir.absolutePath() + "/" + "custom_train_conf.conf" ;
     customTestConfPath = baseDir.absolutePath() + "/" + "custom_test_conf.conf" ;
+
+    // ltp-cws Exe Path Conf
+    QString cwsExeDir = exePath + "/" + "cws_bin" ;
+    if(!baseDir.exists(cwsExeDir))
+    {
+        hasRightCwsExe = false ;
+    }
+    else
+    {
+        hasRightCwsExe = true ;
+    }
+    getPlatform(platform) ;
+    if(platform == P_WIN32)
+    {
+        basicCwsExePath = cwsExeDir + "/win32/" + "otcws.exe" ;
+        customCwsExePath = cwsExeDir + "/win32/" + "otcws-customized.exe" ;
+    }
+    else if(platform == P_LINUX32)
+    {
+        basicCwsExePath = cwsExeDir + "/linux32/" + "otcws" ;
+        customCwsExePath = cwsExeDir + "/linux32/" + "otcws-customized" ;
+    }
+    else if(platform == P_OSX)
+    {
+        basicCwsExePath = cwsExeDir + "/osx/" + "otcws" ;
+        customCwsExePath= cwsExeDir + "/osx/" + "otcws-customized" ;
+    }
+    else
+    {
+        basicCwsExePath = cwsExeDir + "/others/" + "otcws" ;
+        customCwsExePath = cwsExeDir + "/others/" + "otcws-customized" ;
+    }
+    hasRightCwsExe = QFile::exists(basicCwsExePath) && QFile::exists(customCwsExePath) ;
+
+    qDebug() << (hasRightCwsExe ? QObject::tr("CWS程序准备就绪\n") : QObject::tr("CWS未找到\n"))
+             << basicCwsExePath <<"\n"
+             << customCwsExePath <<"\n"
+             << platform <<"\n" ;
+
     basicModelIntro = QObject::tr("本模块用于训练基础模型（推荐使用上述LTP分词模型作为基础模型）。\n"
                                         "选择相应的训练集语料、开发集语料以及模型保存路径，点击训练按钮即开始训练。"
                                         "训练一般耗时较长，请耐心等待。生成的模型保存在模型保存路径指定的位置。" );
 }
 
-bool Config::saveTrainConfig(bool isCustomMode ,QString trainingSetPath ,QString devingSetPath ,
+bool Config::saveTrainConfigAndSetState(bool isCustomMode ,QString trainingSetPath ,QString devingSetPath ,
                              QString modelSavingPath , QString max_ite ,QString basicModelPath)
 {
-   QString trainConfPath = isCustomMode ? customTrainConfPath : basicTrainConfPath ;
-   QFile trainF(trainConfPath) ;
+   currentTrainConf = isCustomMode ? customTrainConfPath : basicTrainConfPath ;
+   QFile trainF(currentTrainConf) ;
    if(!trainF.open(QIODevice::WriteOnly | QIODevice::Text))
    {
-       QMessageBox::information(NULL , QObject::tr("内部程序错误") , QObject::tr("找不到训练配置文件")) ;
+       qDebug() << "训练配置文件写入失败——找不到训练配置文件" ;
        return false ;
    }
    QTextStream out(&trainF) ;
@@ -41,16 +82,63 @@ bool Config::saveTrainConfig(bool isCustomMode ,QString trainingSetPath ,QString
    if(isCustomMode)
    {
        out << "baseline-model-file = " << basicModelPath << "\n"
-              << "customized-model-name = " << modelSavingPath <<"\n" ;
+           << "customized-model-name = " << modelSavingPath <<"\n" ;
    }
    else
    {
        out << "model-name = " << modelSavingPath << "\n" ;
    }
+   currentCwsExePath = isCustomMode ? customCwsExePath : basicCwsExePath ;
    return true ;
 }
 bool Config::loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QString & devingSetPath ,
                              QString & modelSavingPath , QString & max_ite ,QString & basicModelPath)
 {
+    QString trainConf = isCustomMode ? customTrainConfPath : basicTrainConfPath ;
+    QFile rf(trainConf) ;
+    if(!rf.open(QFile::ReadOnly|QFile::Text))
+    {
+        return false ;
+    }
+    QTextStream in(&rf) ;
+    while(!in.atEnd())
+    {
+        QString line = in.readLine().trimmed() ;
+        QStringList parts = line.split(QRegExp("\\s+=\\s+")) ;
+        if(parts.length() != 2) continue ;
+        QString key = parts[0] ;
+        QString val = parts[1] ;
+        if(key == "train-file") trainingSetPath = val ;
+        else if(key == "holdout-file") devingSetPath = val ;
+        else if(key == "max-iter") max_ite = val ;
+        else if(key == "baseline-model-file") basicModelPath = val ;
+        else if(key == "customized-model-name") modelSavingPath = val ;
+        else if(key == "model-name") {modelSavingPath = val ; basicModelPath = "" ;} // Means it is basicTrainMode
+    }
     return true ;
+}
+void Config::getPlatform(Platform &curPlatform)
+{
+#if defined(Q_OS_WIN)
+    curPlatform = P_WIN32 ;
+#elif defined(Q_OS_LINUX)
+    curPlatform = P_LINUX32 ;
+#elif defined(Q_OS_MAC)
+    curPlatform = P_OSX ;
+#else
+    curPlatform = P_OTHERS ;
+#endif
+}
+bool Config::getCwsExeState()
+{
+    return hasRightCwsExe ;
+}
+
+QString Config::getCurrentTrainConf()
+{
+    return currentTrainConf ;
+}
+QString Config::getCurrentCwsExePath()
+{
+    return currentCwsExePath ;
 }
