@@ -57,13 +57,13 @@ void Widget::createTrainWidget()
     trainModeBtnGroup->addButton(basicRadio) ;
     trainModeBtnGroup->addButton(customRadio) ;
     QLabel * trainModelInfo = new QLabel() ;
-    trainModelInfo->setText(config.basicModelIntro) ;
     trainModelInfo->setWordWrap(true) ;
     QGridLayout *modelLayout = new QGridLayout ;
     modelLayout->addWidget(basicRadio , 0 , 0) ;
     modelLayout->addWidget(customRadio , 0 , 1) ;
     modelLayout->addWidget(trainModelInfo , 1 , 0 , 2 , 2) ;
     trainModelBox->setLayout(modelLayout) ;
+    trainModelBox->setMinimumHeight(150) ; // avoid height change as model changing
     trainLayout->addWidget(trainModelBox , 0,0,3,6) ;
 
     // path config
@@ -108,12 +108,15 @@ void Widget::createTrainWidget()
       {
          setLayoutItemsEnabled(basicModelLayout,false) ;
          trainMode = BasicTrainMode ;
+         trainModelInfo->setText(config.basicModeIntro) ;
       }
       else if(button == customRadio)
       {
          setLayoutItemsEnabled(basicModelLayout,true) ;
          trainMode = CustomTrainMode ;
+         trainModelInfo->setText(config.customModeIntro) ;
       }
+      preSetAllPathSelectViews() ;
     } ;
     connect(trainModeBtnGroup , static_cast<void(QButtonGroup::*)(QAbstractButton *)>(&QButtonGroup::buttonClicked) ,
             radioSwitchHandler) ;
@@ -156,18 +159,47 @@ void Widget::createTrainWidget()
         {
             qDebug() << "process started" ;
             trainBtn->setDisabled(true) ;
+            // radio button should also be set disable
+            for(const auto & radioBtn : trainModeBtnGroup->buttons()){ radioBtn->setDisabled(true) ;}
         }) ;
         connect(trainProcess , QProcess::readyReadStandardError , [=]()
         {
+            // format log for display
             QString readedLog =  trainProcess->readAllStandardError().trimmed() ;
-            qDebug() << readedLog ;
-            trainEditLog->appendPlainText(readedLog);
-            //trainEditLog->verticalScrollBar()->setValue(trainEditLog.verticalScrollBar()->maximum());
+            QString separator = "__" ;
+            readedLog.replace(QRegExp("(\\[TRACE\\]|\\[ERROR\\])"),separator + "\\1") ;
+            QStringList logs = readedLog.split(separator , QString::SkipEmptyParts) ;
+
+            QString strongS = "<b>" , strongE = "</b>" ;
+            QString redS = "<span style='color:red'>" , redE = "</span>" ;
+            QString enter = "<br/>" ;
+            for(const QString & log : logs)
+            {
+                QString formatedLog = log ;
+                if(formatedLog.indexOf("Model for iteration") != -1)
+                {
+                    formatedLog = strongS + formatedLog + strongE ;
+                }
+                else if(formatedLog.indexOf("Best result") != -1)
+                {
+                    formatedLog = redS + formatedLog + redE ;
+                }
+                else
+                {
+                    formatedLog.replace(QRegExp("\\[TRACE\\]") , strongS + "[TRACE]" + strongE);
+                    formatedLog.replace(QRegExp("\\[ERROR\\]") , redS + "[ERROR]" + redE) ;
+                }
+                formatedLog = formatedLog + enter ;
+                qDebug() << formatedLog ;
+                trainEditLog->appendHtml(formatedLog);
+            }
+
 
         }) ;
         connect(trainProcess , static_cast<void(QProcess::*)(int , QProcess::ExitStatus)>(&QProcess::finished) , [=](int exitCode, QProcess::ExitStatus exitStatus)
         {
             trainBtn->setEnabled(true) ;
+            for(const auto & radioBtn : trainModeBtnGroup->buttons() ){ radioBtn->setEnabled(true) ;}
             qDebug() << "exitCode" << exitCode
                      << exitStatus ;
         }) ;
@@ -213,6 +245,7 @@ QGridLayout* Widget::createPathSelectView(QString  label , QLineEdit *& edit,boo
     QGridLayout *layout = new QGridLayout ;
     QLabel *labelWidget = new QLabel(label) ;
     edit = new QLineEdit() ;
+    edit->setFont(QFont("consolas" , 9)) ;
     QPushButton *btn = new QPushButton() ;
     if(isOpenFile)
     {
@@ -245,6 +278,28 @@ QGridLayout* Widget::createPathSelectView(QString  label , QLineEdit *& edit,boo
     layout->addWidget(btn,0,5) ;
     return layout ;
 }
+
+void Widget::preSetAllPathSelectViews()
+{
+    QString trainingSetPath , devingSetPath , basicModelPath ,
+            maxIte , modelSavingPath ;
+    bool isCustomMode = ( trainMode == CustomTrainMode ) ;
+    bool loadStatus = config.loadTrainConfig(isCustomMode , trainingSetPath , devingSetPath , modelSavingPath ,
+                           maxIte , basicModelPath) ;
+    if(loadStatus == true)
+    {
+        trainPathEditTrain->setText(trainingSetPath) ;
+        trainPathEditDev->setText(devingSetPath) ;
+        trainPathEditModelSaving->setText(modelSavingPath) ;
+        trainMaxIte->setText(maxIte) ;
+        if(isCustomMode)
+        {
+            trainPathEditBasicModel->setText(basicModelPath) ;
+        }
+        else {trainPathEditBasicModel->clear() ;}
+    }
+}
+
 void Widget::setLayoutItemsEnabled(QLayout *layout,bool enable)
 {
     for(int i = 0 ; i < layout->count() ; ++i)

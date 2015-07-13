@@ -12,7 +12,8 @@ class Config
    public :
     Config() ;
     enum Platform { P_WIN32 , P_LINUX32 , P_OSX , P_OTHERS} ;
-    QString basicModelIntro ;
+    QString basicModeIntro ;
+    QString customModeIntro ;
     bool saveTrainConfigAndSetState(bool isCustomMode ,QString trainingSetPath ,QString devingSetPath ,
                          QString modelSavingPath , QString max_ite ,QString basicModelPath)  ;
     bool loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QString & devingSetPath ,

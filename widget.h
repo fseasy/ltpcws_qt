@@ -37,6 +37,7 @@ private :
     void createTrainWidget();
     void createTestWidget() ;
     QGridLayout* createPathSelectView(QString label ,QLineEdit * & edit ,bool isOpenFile=true) ;
+    void preSetAllPathSelectViews() ;
     void setLayoutItemsEnabled(QLayout * layout,bool enable) ;
     void bindSwitchWidget() ;
 
