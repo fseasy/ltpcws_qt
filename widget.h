@@ -20,6 +20,8 @@
 #include <QProcess>
 #include <QtDebug>
 #include <functional>
+#include <QTextCodec>
+#include <QByteArray>
 #include "config.h"
 
 class Widget : public QWidget
@@ -32,20 +34,21 @@ public:
     enum TestMode{BasicTestMode , CustomTestMode} ;
     ~Widget();
 private :
-    // UI
+    // Main UI
     void createLeftBox() ;
     void createTrainWidget();
     void createTestWidget() ;
     QGridLayout* createPathSelectView(QString label ,QLineEdit * & edit ,bool isOpenFile=true) ;
-    void preSetAllPathSelectViews() ;
     void setLayoutItemsEnabled(QLayout * layout,bool enable) ;
     void bindSwitchWidget() ;
 
     QGridLayout *mainLayout ;
-
     QGroupBox *leftBox ;
     QPushButton *trainWidgetSwitchBtn ;
     QPushButton *testWidgetSwitchBtn ;
+
+    // train only
+    void preSetAllTrainPathSelectViews() ;
 
     QLineEdit *trainPathEditTrain ;
     QLineEdit *trainPathEditDev ;
@@ -53,6 +56,12 @@ private :
     QLineEdit *trainPathEditModelSaving ;
     QLineEdit *trainMaxIte ;
     QPlainTextEdit *trainEditLog ;
+
+    // predict(test) only
+    void preSetAllPredictPathSelectViews() ;
+
+    QLineEdit *testPathEditBasicModel ;
+    QLineEdit *testPathEditCustomModel ;
 
     QWidget *trainWidget ;
     QWidget *testWidget ;

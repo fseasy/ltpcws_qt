@@ -108,15 +108,15 @@ void Widget::createTrainWidget()
       {
          setLayoutItemsEnabled(basicModelLayout,false) ;
          trainMode = BasicTrainMode ;
-         trainModelInfo->setText(config.basicModeIntro) ;
+         trainModelInfo->setText(config.basicModeTrainIntro) ;
       }
       else if(button == customRadio)
       {
          setLayoutItemsEnabled(basicModelLayout,true) ;
          trainMode = CustomTrainMode ;
-         trainModelInfo->setText(config.customModeIntro) ;
+         trainModelInfo->setText(config.customModeTrainIntro) ;
       }
-      preSetAllPathSelectViews() ;
+      preSetAllTrainPathSelectViews() ;
     } ;
     connect(trainModeBtnGroup , static_cast<void(QButtonGroup::*)(QAbstractButton *)>(&QButtonGroup::buttonClicked) ,
             radioSwitchHandler) ;
@@ -216,9 +216,87 @@ void Widget::createTrainWidget()
 void Widget::createTestWidget()
 {
     testWidget = new QWidget() ;
-    QVBoxLayout *testWidgetLayout = new QVBoxLayout ;
-    testWidget->setLayout(testWidgetLayout) ;
-    testWidgetLayout->addWidget(new QPushButton(tr("测试面板"))) ;
+    QGridLayout *testLayout = new QGridLayout() ;
+    testWidget->setLayout(testLayout) ;
+
+    /** Model Config part */
+    // UI
+    QGroupBox * modelConfBox = new QGroupBox(tr("模型配置")) ;
+    QGridLayout *modelConfLayout = new QGridLayout() ;
+    modelConfBox->setLayout(modelConfLayout) ;
+    QRadioButton *basicModelRadio = new QRadioButton(tr("基础模型")) ;
+    QRadioButton *customModelRadio = new QRadioButton(tr("个性化模型")) ;
+    QLabel * modeInfo = new QLabel() ;
+    modeInfo->setWordWrap(true) ;
+    QGridLayout *basicModelPathView = createPathSelectView(tr("基础模型路径") , testPathEditBasicModel) ;
+    QGridLayout *customModelPathView = createPathSelectView(tr("个性化模型路径") , testPathEditCustomModel) ;
+    modelConfLayout->addWidget(basicModelRadio,0,0) ;
+    modelConfLayout->addWidget(customModelRadio , 0, 1) ;
+    modelConfLayout->addWidget(modeInfo , 1, 0 , 2 ,2 ) ;
+    modelConfLayout->addLayout(basicModelPathView , 3,0,1,2) ;
+    modelConfLayout->addLayout(customModelPathView ,4,0,1,2) ;
+    testLayout->addWidget(modelConfBox , 0 , 0 , 6 , 6) ;
+    // Logic
+    QButtonGroup *modelConfBtnGroup = new QButtonGroup() ;
+    modelConfBtnGroup->addButton(basicModelRadio) ;
+    modelConfBtnGroup->addButton(customModelRadio) ;
+    // Event
+    std::function<void(QAbstractButton *)> modelConfRadioBtnClickHandler = [=](QAbstractButton * btn)
+    {
+        if(btn == basicModelRadio)
+        {
+            modeInfo->setText(config.basicModePredictIntro) ;
+            setLayoutItemsEnabled(customModelPathView , false) ;
+        }
+        else if(btn == customModelRadio)
+        {
+            modeInfo->setText(config.customModePredictIntro) ;
+            setLayoutItemsEnabled(customModelPathView , true) ;
+        }
+        preSetAllPredictPathSelectViews() ;
+
+    } ;
+
+    connect(modelConfBtnGroup , static_cast<void(QButtonGroup::*)(QAbstractButton *)>(&QButtonGroup::buttonClicked) ,
+            modelConfRadioBtnClickHandler) ;
+
+
+    /** INPUT Editor */
+    // UI
+    QGroupBox * inputBox = new QGroupBox(tr("输入")) ;
+    QGridLayout * inputLayout = new QGridLayout() ;
+    inputBox->setLayout(inputLayout) ;
+    QPlainTextEdit * inputEditor = new QPlainTextEdit() ;
+    inputEditor->setFont(QFont("Microsoft YaHei" , 10)) ;
+    QPushButton *loadFileBtn = new QPushButton(tr("从文件中加载")) ;
+    QPushButton *clearBtn = new QPushButton(tr("清除输入")) ;
+    inputLayout->addWidget(inputEditor , 0 , 0 , 4 , 6) ;
+    inputLayout->addWidget(loadFileBtn , 5 , 4 , 1 , 1) ;
+    inputLayout->addWidget(clearBtn , 5 , 5 , 1, 1) ;
+    inputBox->setMaximumHeight(150) ; // max height 150
+    testLayout->addWidget(inputBox , 6 , 0 , 6 , 6) ;
+    // UI logic
+    connect(clearBtn , QPushButton::clicked , inputEditor , QPlainTextEdit::clear) ;
+    connect(loadFileBtn , QPushButton::clicked ,[=]()
+    {
+        QString fName = QFileDialog::getOpenFileName(this , "", "~") ;
+        if(fName.isEmpty()) return ;
+        QFile fi(fName) ;
+        if(!fi.open(QFile::ReadOnly | QFile::Text))
+        {
+            QMessageBox::information(this , tr("读取文件失败") ,
+                                     tr("打开文件失败")) ;
+            return ;
+        }
+        inputEditor->clear() ;
+        QTextStream fis(&fi) ;
+        fis.setCodec("utf8") ;
+        while(!fis.atEnd())
+        {
+            QString line = fis.readLine() ;
+            inputEditor->appendPlainText(line) ;
+        }
+    }) ;
 }
 
 
@@ -279,7 +357,7 @@ QGridLayout* Widget::createPathSelectView(QString  label , QLineEdit *& edit,boo
     return layout ;
 }
 
-void Widget::preSetAllPathSelectViews()
+void Widget::preSetAllTrainPathSelectViews()
 {
     QString trainingSetPath , devingSetPath , basicModelPath ,
             maxIte , modelSavingPath ;
@@ -298,6 +376,10 @@ void Widget::preSetAllPathSelectViews()
         }
         else {trainPathEditBasicModel->clear() ;}
     }
+}
+void ::Widget::preSetAllPredictPathSelectViews()
+{
+
 }
 
 void Widget::setLayoutItemsEnabled(QLayout *layout,bool enable)
