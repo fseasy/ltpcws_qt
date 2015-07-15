@@ -20,17 +20,24 @@ class Config
                          QString modelSavingPath , QString max_ite ,QString basicModelPath)  ;
     bool loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QString & devingSetPath ,
                          QString & modelSavingPath , QString & max_ite ,QString & basicModelPath) ;
+    bool savePredictConfigAndSetState(bool isCustomMode ,QString basicModelPath , QString customModelPath) ;
+    bool loadPredictConfig(bool isCustomMode , QString &basicModelPath , QString &customModelPath) ;
+    bool savePredictInputContent(QString &content) ;
     void getPlatform(Platform &curPlatform ) ;
     bool getCwsExeState() ;
     QString getCurrentTrainConf() ;
     QString getCurrentCwsExePath() ;
 private :
     QDir baseDir ;
+
     QString basicTrainConfPath ;
     QString basicTestConfPath ;
     QString customTrainConfPath ;
     QString customTestConfPath ;
+    QString predictInputTmpFilePath ;
+
     QString currentTrainConf ;
+    QString currentPredictConf ;
 
     Platform platform ;
 

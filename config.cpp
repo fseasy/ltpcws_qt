@@ -17,7 +17,7 @@ Config::Config()
     basicTestConfPath = baseDir.absolutePath() + "/" + "basic_test_conf.conf" ;
     customTrainConfPath = baseDir.absolutePath() + "/" + "custom_train_conf.conf" ;
     customTestConfPath = baseDir.absolutePath() + "/" + "custom_test_conf.conf" ;
-
+    predictInputTmpFilePath = baseDir.absolutePath() + "/" + "predictinput.tmp" ;
     // ltp-cws Exe Path Conf
     QString cwsExeDir = exePath + "/" + "cws_bin" ;
     if(!baseDir.exists(cwsExeDir))
@@ -79,6 +79,7 @@ bool Config::saveTrainConfigAndSetState(bool isCustomMode ,QString trainingSetPa
        return false ;
    }
    QTextStream out(&trainF) ;
+   out.setCodec("utf8") ;
    out << "[train]" << "\n"
           << "train-file = " << trainingSetPath <<"\n"
           << "holdout-file = " << devingSetPath <<"\n"
@@ -108,6 +109,7 @@ bool Config::loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QStri
         return false ;
     }
     QTextStream in(&rf) ;
+    in.setCodec("utf8") ;
     while(!in.atEnd())
     {
         QString line = in.readLine().trimmed() ;
@@ -124,6 +126,72 @@ bool Config::loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QStri
     }
     return true ;
 }
+bool Config::savePredictInputContent(QString &content)
+{
+    QFile fo(predictInputTmpFilePath) ;
+    if(fo.open(QFile::WriteOnly | QFile::Text))
+    {
+        return false ;
+    }
+    QTextStream fos(&fo) ;
+    fos.setCodec("utf8") ;
+    fos << content ;
+    return true ;
+}
+
+bool Config::savePredictConfigAndSetState(bool isCustomMode ,QString basicModelPath ,
+                                          QString customModelPath)
+{
+    currentPredictConf = isCustomMode ? customTestConfPath : basicTestConfPath ;
+    QFile fo(currentPredictConf) ;
+    if(!fo.open(QFile::WriteOnly | QFile::Text))
+    {
+        return false ;
+    }
+    QTextStream fos(&fo) ;
+    fos.setCodec("utf8") ;
+    fos <<"[test]" <<"\n"
+        <<"test-file = " << predictInputTmpFilePath <<"\n" ;
+    if(isCustomMode)
+    {
+       fos <<"customized-model-file = " << customModelPath << "\n"
+           <<"baseline-model-file = " << basicModelPath <<"\n" ;
+    }
+    else
+    {
+       fos <<"model-file = " <<basicModelPath <<"\n" ;
+    }
+    currentCwsExePath = isCustomMode ? customCwsExePath :  basicCwsExePath ;
+    return true ;
+}
+bool Config::loadPredictConfig(bool isCustomMode , QString &basicModelPath , QString &customModelPath)
+{
+    QString currentConf = isCustomMode ? customTestConfPath : basicTestConfPath ;
+    QFile fi(currentConf) ;
+    if(fi.open(QFile::ReadOnly | QFile::Text))
+    {
+        return false ;
+    }
+    QTextStream fis(&fi) ;
+    fis.setCodec("utf8") ;
+    while(!fis.atEnd())
+    {
+        QString line = fis.readLine().trimmed() ;
+        QStringList parts = line.split(QRegExp("\\s+=\\s+")) ;
+        if(parts.length() != 2) continue ;
+        QString key = parts[0] ;
+        QString val = parts[1] ;
+        if(key == "model-file")
+        {
+            basicModelPath = val ;
+            customModelPath = "" ;
+        }
+        else if(key == "customized-model-file"){ customModelPath = val ;}
+        else if(key == "baseline-model-file"){ basicModelPath = val ;}
+    }
+    return true ;
+}
+
 void Config::getPlatform(Platform &curPlatform)
 {
 #if defined(Q_OS_WIN)

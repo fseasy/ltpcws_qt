@@ -31,7 +31,7 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = 0);
     enum TrainMode{BasicTrainMode , CustomTrainMode} ;
-    enum TestMode{BasicTestMode , CustomTestMode} ;
+    enum PredictMode{BasicPredictMode , CustomPredictMode} ;
     ~Widget();
 private :
     // Main UI
@@ -71,9 +71,8 @@ private :
     bool checkReadPathValid(QString path) ;
     bool checkWritePathValid(QString path) ;
     Config config ;
-    QProcess * trainProcess ;
     TrainMode trainMode ;
-    TestMode testMode ;
+    PredictMode predictMode ;
 
 public slots :
 

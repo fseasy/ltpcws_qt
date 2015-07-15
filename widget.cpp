@@ -23,7 +23,7 @@ Widget::Widget(QWidget *parent)
 
     // Logit Init
     trainMode = CustomTrainMode ;
-    testMode = CustomTestMode ;
+    predictMode = CustomPredictMode ;
 
     bindSwitchWidget() ;
     resize(600,300) ;
@@ -131,7 +131,7 @@ void Widget::createTrainWidget()
         if(!checkPathState)
         {
             QMessageBox::information(this , tr("路径设置错误") ,
-                                     tr("路径检查错误！请检查路径配置是否正确。然后重现点击按钮。")) ;
+                                     tr("路径检查错误！请检查路径配置是否正确。然后重新点击按钮。")) ;
             return ;
         }
         bool confSavingState = config.saveTrainConfigAndSetState(isCustomMode , trainPathEditTrain->text() , trainPathEditDev->text() ,
@@ -154,7 +154,7 @@ void Widget::createTrainWidget()
         }
         QStringList param ;
         param << config.getCurrentTrainConf() ;
-        trainProcess = new QProcess(this) ;
+        QProcess *trainProcess = new QProcess(this) ;
         connect(trainProcess , QProcess::started , [=]()
         {
             qDebug() << "process started" ;
@@ -247,11 +247,13 @@ void Widget::createTestWidget()
         {
             modeInfo->setText(config.basicModePredictIntro) ;
             setLayoutItemsEnabled(customModelPathView , false) ;
+            predictMode = BasicPredictMode ;
         }
         else if(btn == customModelRadio)
         {
             modeInfo->setText(config.customModePredictIntro) ;
             setLayoutItemsEnabled(customModelPathView , true) ;
+            predictMode = CustomPredictMode ;
         }
         preSetAllPredictPathSelectViews() ;
 
@@ -270,16 +272,18 @@ void Widget::createTestWidget()
     inputEditor->setFont(QFont("Microsoft YaHei" , 10)) ;
     QPushButton *loadFileBtn = new QPushButton(tr("从文件中加载")) ;
     QPushButton *clearBtn = new QPushButton(tr("清除输入")) ;
-    inputLayout->addWidget(inputEditor , 0 , 0 , 4 , 6) ;
+    QPushButton *cwsBtn = new QPushButton(tr("分词")) ;
+    inputLayout->addWidget(inputEditor , 0 , 0 , 5 , 6) ;
     inputLayout->addWidget(loadFileBtn , 5 , 4 , 1 , 1) ;
     inputLayout->addWidget(clearBtn , 5 , 5 , 1, 1) ;
+    inputLayout->addWidget(cwsBtn , 5,0,1,1) ;
     inputBox->setMaximumHeight(150) ; // max height 150
     testLayout->addWidget(inputBox , 6 , 0 , 6 , 6) ;
     // UI logic
     connect(clearBtn , QPushButton::clicked , inputEditor , QPlainTextEdit::clear) ;
     connect(loadFileBtn , QPushButton::clicked ,[=]()
     {
-        QString fName = QFileDialog::getOpenFileName(this , "", "~") ;
+        QString fName = QFileDialog::getOpenFileName(this , "",QDir::homePath()) ;
         if(fName.isEmpty()) return ;
         QFile fi(fName) ;
         if(!fi.open(QFile::ReadOnly | QFile::Text))
@@ -297,6 +301,85 @@ void Widget::createTestWidget()
             inputEditor->appendPlainText(line) ;
         }
     }) ;
+
+    /** result display */
+    // UI
+    QGroupBox *displayBox = new QGroupBox("分词结果") ;
+    QGridLayout *displayLayout = new QGridLayout() ;
+    displayBox->setLayout(displayLayout) ;
+    QPlainTextEdit *displayRstEditor = new QPlainTextEdit() ;
+    QPushButton *saveBtn = new QPushButton(tr("保存到文件")) ;
+    displayLayout->addWidget(displayRstEditor , 0 , 0 , 5 , 6) ;
+    displayLayout->addWidget(saveBtn , 5 , 0 ) ;
+    testLayout->addWidget(displayBox , 12 , 0 , 6 , 6) ;
+
+    // UI logic
+    connect(saveBtn , QPushButton::clicked , [=]()
+    {
+        QString fName = QFileDialog::getSaveFileName(this , "" , QDir::homePath() ,tr("Text files (*.txt);;Other files (*.*)") ) ;
+        if(fName.isEmpty())
+        {
+            return ;
+        }
+        QFile fo(fName) ;
+        if(!fo.open(QFile::WriteOnly | QFile::Text))
+        {
+            QMessageBox::information(this , tr("写入文件失败") ,
+                                     tr("打开文件失败")) ;
+            return ;
+        }
+        QTextStream fos(&fo) ;
+        fos.setCodec("utf8") ;
+        fos << displayRstEditor->toPlainText() ;
+    }) ;
+
+    // LTP_CWS predict process
+    connect(cwsBtn , QPushButton::clicked , [=]()
+    {
+        bool isCustomMode = (predictMode == CustomPredictMode) ;
+        QString basicModelPath = testPathEditBasicModel->text() ;
+        QString customModelPath = testPathEditCustomModel->text() ;
+        // check Model path
+        bool checkModelPathState = checkReadPathValid(basicModelPath) ;
+        if(isCustomMode){checkModelPathState = checkModelPathState && checkReadPathValid(customModelPath) ;}
+        if(!checkModelPathState)
+        {
+            QMessageBox::information(this , tr("模型路径错误") ,
+                                     tr("模型路径不存在！请重新设置路径然后重新点击按钮!")) ;
+            return ;
+        }
+        bool saveState = config.savePredictConfigAndSetState(isCustomMode,basicModelPath,customModelPath) ;
+        if(!saveState)
+        {
+            QMessageBox::information(this , tr("内部错误") ,
+                                     tr("配置文件保存失败")) ;
+            return ;
+        }
+        QString inputContent = inputEditor->toPlainText() ;
+        saveState = config.savePredictInputContent(inputContent) ;
+        if(!saveState)
+        {
+            QMessageBox::information(this , tr("内部错误") ,
+                                     tr("输入内容转存文件错误")) ;
+            return ;
+        }
+
+        // start Predict
+        QProcess * predictProcess = new QProcess() ;
+        connect(predictProcess , QProcess:started , [=]()
+        {
+            cwsBtn->setEnabled(false) ;
+            for(const auto & radioBtn : modelConfBtnGroup->buttons()){radioBtn->setEnabled(false) ;}
+        }) ;
+        connect(predictProcess , static_cast<void(int , QProcess::ExitStatus)(&QProcess::finished)> ,
+                [=](int exitCode , QProcess::ExitStatus status)
+        {
+            cwsBtn->setEnabled(true) ;
+            for(const auto &radioBtn : modelConfBtnGroup->buttons()){radioBtn->setEnabled(true) ;}
+            qDebug() << exitCode << status ;
+        }) ;
+
+    });
 }
 
 
