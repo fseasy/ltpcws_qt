@@ -129,7 +129,7 @@ bool Config::loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QStri
 bool Config::savePredictInputContent(QString &content)
 {
     QFile fo(predictInputTmpFilePath) ;
-    if(fo.open(QFile::WriteOnly | QFile::Text))
+    if(!fo.open(QFile::WriteOnly | QFile::Text))
     {
         return false ;
     }
@@ -168,7 +168,7 @@ bool Config::loadPredictConfig(bool isCustomMode , QString &basicModelPath , QSt
 {
     QString currentConf = isCustomMode ? customTestConfPath : basicTestConfPath ;
     QFile fi(currentConf) ;
-    if(fi.open(QFile::ReadOnly | QFile::Text))
+    if(!fi.open(QFile::ReadOnly | QFile::Text))
     {
         return false ;
     }
@@ -213,6 +213,12 @@ QString Config::getCurrentTrainConf()
 {
     return currentTrainConf ;
 }
+
+QString Config::getCurrentPredictConf()
+{
+    return currentPredictConf ;
+}
+
 QString Config::getCurrentCwsExePath()
 {
     return currentCwsExePath ;

@@ -308,12 +308,29 @@ void Widget::createTestWidget()
     QGridLayout *displayLayout = new QGridLayout() ;
     displayBox->setLayout(displayLayout) ;
     QPlainTextEdit *displayRstEditor = new QPlainTextEdit() ;
+    displayRstEditor->setReadOnly(true) ;
+    displayRstEditor->setWordWrapMode(QTextOption::NoWrap) ;
+    displayRstEditor->setTabStopWidth(40) ; // '\t' width
+    displayRstEditor->setFont(QFont("Microsoft YaHei",10)) ;
+    QCheckBox *isWordWrapBtn = new QCheckBox(tr("自动换行")) ;
     QPushButton *saveBtn = new QPushButton(tr("保存到文件")) ;
     displayLayout->addWidget(displayRstEditor , 0 , 0 , 5 , 6) ;
-    displayLayout->addWidget(saveBtn , 5 , 0 ) ;
+    displayLayout->addWidget(isWordWrapBtn , 5 , 0) ;
+    displayLayout->addWidget(saveBtn , 5 , 1 ) ;
     testLayout->addWidget(displayBox , 12 , 0 , 6 , 6) ;
 
     // UI logic
+    connect(isWordWrapBtn , static_cast<void(QCheckBox::*)(int)>(&QCheckBox::stateChanged) , [=](int state)
+    {
+        if(state == Qt::Unchecked)
+        {
+            displayRstEditor->setWordWrapMode(QTextOption::NoWrap) ;
+        }
+        else if(state == Qt::Checked)
+        {
+            displayRstEditor->setWordWrapMode(QTextOption::WordWrap) ;
+        }
+    }) ;
     connect(saveBtn , QPushButton::clicked , [=]()
     {
         QString fName = QFileDialog::getSaveFileName(this , "" , QDir::homePath() ,tr("Text files (*.txt);;Other files (*.*)") ) ;
@@ -366,20 +383,34 @@ void Widget::createTestWidget()
 
         // start Predict
         QProcess * predictProcess = new QProcess() ;
-        connect(predictProcess , QProcess:started , [=]()
+        connect(predictProcess , QProcess::started , [=]()
         {
             cwsBtn->setEnabled(false) ;
             for(const auto & radioBtn : modelConfBtnGroup->buttons()){radioBtn->setEnabled(false) ;}
         }) ;
-        connect(predictProcess , static_cast<void(int , QProcess::ExitStatus)(&QProcess::finished)> ,
+        connect(predictProcess , static_cast<void(QProcess::*)(int , QProcess::ExitStatus)>(&QProcess::finished) ,
                 [=](int exitCode , QProcess::ExitStatus status)
         {
             cwsBtn->setEnabled(true) ;
             for(const auto &radioBtn : modelConfBtnGroup->buttons()){radioBtn->setEnabled(true) ;}
             qDebug() << exitCode << status ;
         }) ;
+        connect(predictProcess , QProcess::readyReadStandardOutput , [=]()
+        {
+            QString readedCont = predictProcess->readAllStandardOutput() ;
+            //displayRstEditor->appendPlainText(readedCont) ;
+            displayRstEditor->insertPlainText(readedCont) ;
+        }) ;
+        QStringList params ;
+        params << config.getCurrentPredictConf() ;
+        predictProcess->start(config.getCurrentCwsExePath() , params) ;
 
     });
+
+    /*** Init State */
+    predictMode = CustomPredictMode ;
+    customModelRadio->setChecked(true) ;
+    modelConfRadioBtnClickHandler(customModelRadio) ;
 }
 
 
@@ -462,7 +493,15 @@ void Widget::preSetAllTrainPathSelectViews()
 }
 void ::Widget::preSetAllPredictPathSelectViews()
 {
-
+    QString basicModelPath , customModelPath ;
+    bool isCustomMode = (predictMode == CustomPredictMode) ;
+    bool loadState = config.loadPredictConfig(isCustomMode , basicModelPath , customModelPath) ;
+    if(loadState == true)
+    {
+        testPathEditBasicModel->setText(basicModelPath) ;
+        if(isCustomMode){testPathEditCustomModel->setText(customModelPath) ;}
+        else {testPathEditCustomModel->clear() ;}
+    }
 }
 
 void Widget::setLayoutItemsEnabled(QLayout *layout,bool enable)
@@ -474,7 +513,7 @@ void Widget::setLayoutItemsEnabled(QLayout *layout,bool enable)
 }
 bool Widget::checkReadPathValid(QString path)
 {
-    return true ;
+    return QFile::exists(path) ;
 }
 
 bool Widget::checkWritePathValid(QString path)

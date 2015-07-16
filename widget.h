@@ -16,7 +16,7 @@
 #include <QPlainTexTEdit>
 #include <QScrollBar>
 #include <QSpacerItem>
-
+#include <QCheckBox>
 #include <QProcess>
 #include <QtDebug>
 #include <functional>

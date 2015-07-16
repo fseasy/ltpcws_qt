@@ -26,6 +26,7 @@ class Config
     void getPlatform(Platform &curPlatform ) ;
     bool getCwsExeState() ;
     QString getCurrentTrainConf() ;
+    QString getCurrentPredictConf() ;
     QString getCurrentCwsExePath() ;
 private :
     QDir baseDir ;
