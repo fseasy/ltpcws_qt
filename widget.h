@@ -2,6 +2,7 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <QWebView>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QPushButton>
@@ -10,6 +11,7 @@
 #include <QButtonGroup>
 #include <QAbstractButton>
 #include <QRadioButton>
+#include <QToolButton>
 #include <QLabel>
 #include <QLineEdit>
 #include <QFileDialog>
@@ -38,6 +40,7 @@ private :
     void createLeftBox() ;
     void createTrainWidget();
     void createTestWidget() ;
+    void createAboutWidget() ;
     QGridLayout* createPathSelectView(QString label ,QLineEdit * & edit ,bool isOpenFile=true) ;
     void setLayoutItemsEnabled(QLayout * layout,bool enable) ;
     void bindSwitchWidget() ;
@@ -46,6 +49,7 @@ private :
     QGroupBox *leftBox ;
     QPushButton *trainWidgetSwitchBtn ;
     QPushButton *testWidgetSwitchBtn ;
+    QPushButton *aboutWidgetSwitchBtn ;
 
     // train only
     void preSetAllTrainPathSelectViews() ;
@@ -65,6 +69,7 @@ private :
 
     QWidget *trainWidget ;
     QWidget *testWidget ;
+    QWidget *aboutWidget ;
     QStackedWidget *stackedWidget ;
 
     // Logic state

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource>
+        <file>res/images/predict.png</file>
+        <file>res/images/train.png</file>
+        <file>res/images/about.png</file>
+    </qresource>
+</RCC>

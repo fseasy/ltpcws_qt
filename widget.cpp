@@ -14,11 +14,12 @@ Widget::Widget(QWidget *parent)
 
     createTrainWidget() ;
     createTestWidget() ;
+    createAboutWidget() ;
 
     stackedWidget = new QStackedWidget ;
     stackedWidget->addWidget(trainWidget) ;
     stackedWidget->addWidget(testWidget) ;
-
+    stackedWidget->addWidget(aboutWidget) ;
     mainLayout->addWidget(stackedWidget , 1 , 2 , 1 , 5) ;
 
     // Logit Init
@@ -35,8 +36,23 @@ void Widget::createLeftBox()
     QVBoxLayout *leftBoxLayout = new QVBoxLayout ;
     leftBox->setLayout(leftBoxLayout) ;
 
-    trainWidgetSwitchBtn = new QPushButton(tr("训练")) ;
-    testWidgetSwitchBtn = new QPushButton(tr("分词测试")) ;
+    //trainWidgetSwitchBtn = new QPushButton(tr("训练")) ;
+    //trainWidgetSwitchBtn->setIcon(QIcon(":/res/images/train.png")) ;
+    //trainWidgetSwitchBtn->setFlat(true) ;
+    trainWidgetSwitchBtn = new QPushButton() ;
+    trainWidgetSwitchBtn->setIcon(QIcon(":/res/images/train.png")) ;
+    trainWidgetSwitchBtn->setIconSize(QSize(60,60)) ;
+    trainWidgetSwitchBtn->setFlat(true) ;
+
+    testWidgetSwitchBtn = new QPushButton() ;
+    testWidgetSwitchBtn->setIcon(QIcon(":/res/images/predict.png")) ;
+    testWidgetSwitchBtn->setIconSize(QSize(60,60)) ;
+    testWidgetSwitchBtn->setFlat(true) ;
+
+    aboutWidgetSwitchBtn = new QPushButton() ;
+    aboutWidgetSwitchBtn->setIcon(QIcon(":/res/images/about.png")) ;
+    aboutWidgetSwitchBtn->setIconSize(QSize(60,60)) ;
+    aboutWidgetSwitchBtn->setFlat(false) ;
 
     leftBoxLayout->addWidget(trainWidgetSwitchBtn) ;
     leftBoxLayout->addWidget(testWidgetSwitchBtn) ;
@@ -413,11 +429,16 @@ void Widget::createTestWidget()
     modelConfRadioBtnClickHandler(customModelRadio) ;
 }
 
+void Widget::createAboutWidget()
+{
+
+}
 
 void Widget::bindSwitchWidget()
 {
     connect(trainWidgetSwitchBtn , SIGNAL(clicked()) , this , SLOT(switchWidget())) ;
     connect(testWidgetSwitchBtn , SIGNAL(clicked()) , this , SLOT(switchWidget())) ;
+    connect(aboutWidgetSwitchBtn , SIGNAL(clicked()) , this , SLOT(switchWidget())) ;
 }
 
 void Widget::switchWidget()
@@ -430,6 +451,10 @@ void Widget::switchWidget()
     else if(clickedBtn == testWidgetSwitchBtn)
     {
         stackedWidget->setCurrentWidget(testWidget) ;
+    }
+    else if(clickedBtn == aboutWidgetSwitchBtn)
+    {
+        stackedWidget->setCurrentWidget(aboutWidget) ;
     }
 }
 QGridLayout* Widget::createPathSelectView(QString  label , QLineEdit *& edit,bool isOpenFile)
@@ -518,7 +543,13 @@ bool Widget::checkReadPathValid(QString path)
 
 bool Widget::checkWritePathValid(QString path)
 {
-    return true ;
+    QFile fo(path) ;
+    if(fo.open(QFile::WriteOnly))
+    {
+        fo.close() ;
+        return true ;
+    }
+    else { return false ;}
 }
 
 Widget::~Widget()

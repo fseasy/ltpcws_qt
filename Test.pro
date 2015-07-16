@@ -19,3 +19,6 @@ SOURCES += main.cpp\
 HEADERS  += widget.h \
     config.h
 CONFIG += c++11
+
+RESOURCES += \
+    res.qrc
