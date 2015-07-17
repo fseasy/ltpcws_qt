@@ -1,7 +1,9 @@
 <RCC>
-    <qresource>
+    <qresource prefix="/">
         <file>res/images/predict.png</file>
         <file>res/images/train.png</file>
         <file>res/images/about.png</file>
+        <file>res/html/about.htm</file>
+        <file>res/html/widget.css</file>
     </qresource>
 </RCC>

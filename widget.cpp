@@ -27,7 +27,11 @@ Widget::Widget(QWidget *parent)
     predictMode = CustomPredictMode ;
 
     bindSwitchWidget() ;
-    resize(600,300) ;
+
+    // style sheet
+    LoadWidgetStyle() ;
+
+    resize(700,450) ;
 
 }
 void Widget::createLeftBox()
@@ -36,13 +40,10 @@ void Widget::createLeftBox()
     QVBoxLayout *leftBoxLayout = new QVBoxLayout ;
     leftBox->setLayout(leftBoxLayout) ;
 
-    //trainWidgetSwitchBtn = new QPushButton(tr("训练")) ;
-    //trainWidgetSwitchBtn->setIcon(QIcon(":/res/images/train.png")) ;
-    //trainWidgetSwitchBtn->setFlat(true) ;
     trainWidgetSwitchBtn = new QPushButton() ;
     trainWidgetSwitchBtn->setIcon(QIcon(":/res/images/train.png")) ;
     trainWidgetSwitchBtn->setIconSize(QSize(60,60)) ;
-    trainWidgetSwitchBtn->setFlat(true) ;
+    trainWidgetSwitchBtn->setFlat(false) ;
 
     testWidgetSwitchBtn = new QPushButton() ;
     testWidgetSwitchBtn->setIcon(QIcon(":/res/images/predict.png")) ;
@@ -52,10 +53,11 @@ void Widget::createLeftBox()
     aboutWidgetSwitchBtn = new QPushButton() ;
     aboutWidgetSwitchBtn->setIcon(QIcon(":/res/images/about.png")) ;
     aboutWidgetSwitchBtn->setIconSize(QSize(60,60)) ;
-    aboutWidgetSwitchBtn->setFlat(false) ;
+    aboutWidgetSwitchBtn->setFlat(true) ;
 
     leftBoxLayout->addWidget(trainWidgetSwitchBtn) ;
     leftBoxLayout->addWidget(testWidgetSwitchBtn) ;
+    leftBoxLayout->addWidget(aboutWidgetSwitchBtn) ;
 }
 
 void Widget::createTrainWidget()
@@ -115,7 +117,7 @@ void Widget::createTrainWidget()
     logLayout->addWidget(trainEditLog , 0 ,0  ) ;
     logBox->setLayout(logLayout) ;
     logBox->setMaximumHeight(150);
-    trainLayout->addWidget(logBox , 10 , 0 ,1, 6) ;
+    trainLayout->addWidget(logBox , 9 , 0 ,3, 6) ;
 
     // bind action for train radio
     std::function<void(QAbstractButton *)> radioSwitchHandler = [=](QAbstractButton *button)
@@ -431,11 +433,29 @@ void Widget::createTestWidget()
 
 void Widget::createAboutWidget()
 {
-
+    aboutWidget = new QWebView(this) ;
+    aboutWidget->load(QUrl("qrc:/res/html/about.htm")) ;
+    aboutWidget->show() ;
+}
+void Widget::LoadWidgetStyle()
+{
+    QFile styleF(":/res/html/widget.css") ;
+    if(styleF.open(QFile::ReadOnly|QFile::Text))
+    {
+        QString styleStr = styleF.readAll() ;
+        setStyleSheet(styleStr) ;
+        qDebug() << styleStr ;
+        styleF.close() ;
+    }
+    else
+    {
+        qDebug() << "failed to load Style" ;
+    }
 }
 
 void Widget::bindSwitchWidget()
 {
+
     connect(trainWidgetSwitchBtn , SIGNAL(clicked()) , this , SLOT(switchWidget())) ;
     connect(testWidgetSwitchBtn , SIGNAL(clicked()) , this , SLOT(switchWidget())) ;
     connect(aboutWidgetSwitchBtn , SIGNAL(clicked()) , this , SLOT(switchWidget())) ;
@@ -444,6 +464,10 @@ void Widget::bindSwitchWidget()
 void Widget::switchWidget()
 {
     QPushButton *clickedBtn = static_cast<QPushButton *>(QObject::sender()) ;
+    trainWidgetSwitchBtn->setFlat(true) ;
+    testWidgetSwitchBtn->setFlat(true) ;
+    aboutWidgetSwitchBtn->setFlat(true) ;
+    clickedBtn->setFlat(false) ;
     if(clickedBtn == trainWidgetSwitchBtn)
     {
         stackedWidget->setCurrentWidget(trainWidget) ;

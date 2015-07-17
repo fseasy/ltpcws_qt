@@ -1,0 +1,20 @@
+*{
+    font-family:"Microsoft YaHei","KaiTi","STKaiti" ;
+    font-size:16px ;
+}
+QGroupBox{
+    font-family:"Microsoft YaHei","KaiTi","STKaiti" ;
+    font-size:18px ;
+}
+QLabel{
+    font-family:"KaiTi","STKaiti" ;
+    font-size:14px ;
+}
+QLineEdit{
+    font-size:10px ;
+    font-family:"consolas","Times New Roman" ;
+}
+QPushButton{
+    font-size:14px ;
+    font-family:"KaiTi","STKaiti" ;
+}

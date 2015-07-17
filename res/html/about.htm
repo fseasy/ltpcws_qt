@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf8">
+    <title>About LTP CWS</title>
+    <style>
+    body{
+        font-family:"Microsoft YaHei", "KaiTi_gb2312" , "STKaiti" ;
+        font-size : 16px ;
+    }
+    p{
+        font-family:"KaiTi_gb18030" , "STKaiti" ;
+    }
+    h1,h2,h3{
+        font-family:"Microsoft YaHei","SimHei" , "STHeiti" ;
+    }
+    a{
+        text-decoration:none ;
+    }
+    </style>
+</head>
+<body>
+    <h1>关于LTP分词程序</h1>
+    <h2>LTP-CWS简介</h2>
+        <p>LTP的分词模块基于结构化感知器（Structured Perceptron）算法构建，具有准确率高、速度快等优点；
+        同时支持用户自定义词典，适应不同用户的需求；另外还新增了个性化（增量式）训练功能，用户可以根据自己的实际需求，
+        如对新领域的文本进行分词等，自行标注少量句子的分词结果（比如对LTP分词结果的修正），LTP分词模块可以重新训练一个更好应对新领域的分词器，
+        进一步提高新领域上分词的准确率。</p>
+        <p>分词是许多自然语言处理任务的基础，应用最为广泛。为了方便用户使用分词功能，我们把分词模块独立出来开发了LTP分词版(LTP-CWS)。</p>
+    <h2>资源</h2>
+        <p>LTP-CWS包括两部分，分别是项目源码和编译好的模型文件。你可以从此<a href="https://github.com/HIT-SCIR/ltp-cws">链接</a>
+       获得最新的LTP项目源码,从<a href="http://pan.baidu.com/share/link?shareid=1988562907&uk=2738088569#path=%252Fltp-models%252F3.2.0%252Fsubmodels">百度云</a>
+       上获得基础分词模型(cws.model)(当前模型版本3.2.0)。
+    <h2>关于UI</h2>
+        <p>本程序是在LTP-CWS编译程序之上的GUI外壳，目的是方便普通用户使用分词功能。
+        <p>可将该程序用于小规模的分词演示，若需处理大规模文件，还请直接使用LTP-CWS编译程序。
+        具体使用信息见<a href="https://github.com/HIT-SCIR/ltp-cws">项目</a>帮助文件。
+    <h2>语料格式</h2>
+        <h3>训练及开发语料</h3>
+            <p>请保证语料的编码为UTF8编码。
+            <p>训练及开发语料为人工切分的句子，请使用空格或TAB('\t')分割。
+        <h3>待分词语料</h3>
+            <p>请保证语料编码为UTF8编码。
+    <h2>个性化模型</h2>
+        <h3>训练个性化模型</h3>
+            <p>当用户处理一个特定领域的文本时，例如《诛仙》小说，
+            包含大量特殊的人名、地名、武功等等，LTP的通用模型的准确效果可能并不能满足要求。
+            为了使LTP具备这样的领域适应功能,我们完成了个性化模型训练的功能。用户只需要标注少量（500句左右）特定领域的文本，
+            就能很好的提升效果。
+            <p>训练个性化模型需要指定基础模型及训练、开发语料。基础模型建议直接使用LTP提供的<a href="http://pan.baidu.com/share/link?shareid=1988562907&uk=2738088569#path=%252Fltp-models%252F3.2.0%252Fsubmodels">模型</a>。
+            训练、开发集格式要求见`语料格式`小节。
+        <h3>使用个性化模型做预测</h3>
+            <p>当训练完成个性化模型后，可以选择该模型做个性化预测。预测时需要同时指定基础模型和个性化模型。
+</body>
+</html>

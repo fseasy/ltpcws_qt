@@ -19,6 +19,7 @@ Config::Config()
     customTestConfPath = baseDir.absolutePath() + "/" + "custom_test_conf.conf" ;
     predictInputTmpFilePath = baseDir.absolutePath() + "/" + "predictinput.tmp" ;
     // ltp-cws Exe Path Conf
+
     QString cwsExeDir = exePath + "/" + "cws_bin" ;
     if(!baseDir.exists(cwsExeDir))
     {
@@ -57,12 +58,11 @@ Config::Config()
              << platform <<"\n" ;
 
     basicModeTrainIntro = QObject::tr("本模块用于训练基础模型（推荐使用上述LTP分词模型作为基础模型）。\n"
-                                        "选择相应的训练集语料、开发集语料以及模型保存路径，点击训练按钮即开始训练。"
-                                        "训练一般耗时较长，请耐心等待。生成的模型保存在模型保存路径指定的位置。" );
+                                        "选择相应的路径，点击训练按钮即开始训练。"
+                                        "训练一般耗时较长，请耐心等待。" );
     customModeTrainIntro = QObject::tr("本模块用于基础模型的基础上训练用户自定义的个性化模型。\n"
-                                  "选择相应的训练集语料、开发集语料以及基础模型路径，设置个性化模型保存位置，"
-                                  "点击训练按钮即开始训练。训练一般耗时较长，请耐心等待。"
-                                  "生成的模型保存在个性化模型保存路径指定的位置。") ;
+                                  "选择相应的路径，"
+                                  "点击训练按钮即开始训练。训练一般耗时较长，请耐心等待。") ;
 
     basicModePredictIntro = QObject::tr("使用基础模型对输入本文做分词处理") ;
     customModePredictIntro = QObject::tr("使用个性化模型对输入文本做分词处理") ;

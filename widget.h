@@ -44,6 +44,7 @@ private :
     QGridLayout* createPathSelectView(QString label ,QLineEdit * & edit ,bool isOpenFile=true) ;
     void setLayoutItemsEnabled(QLayout * layout,bool enable) ;
     void bindSwitchWidget() ;
+    void LoadWidgetStyle() ;
 
     QGridLayout *mainLayout ;
     QGroupBox *leftBox ;
@@ -69,7 +70,7 @@ private :
 
     QWidget *trainWidget ;
     QWidget *testWidget ;
-    QWidget *aboutWidget ;
+    QWebView *aboutWidget ;
     QStackedWidget *stackedWidget ;
 
     // Logic state
