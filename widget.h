@@ -2,7 +2,7 @@
 #define WIDGET_H
 
 #include <QWidget>
-#include <QWebView>
+#include <QTextBrowser>
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QPushButton>
@@ -11,19 +11,17 @@
 #include <QButtonGroup>
 #include <QAbstractButton>
 #include <QRadioButton>
-#include <QToolButton>
 #include <QLabel>
 #include <QLineEdit>
 #include <QFileDialog>
 #include <QPlainTexTEdit>
-#include <QScrollBar>
-#include <QSpacerItem>
 #include <QCheckBox>
 #include <QProcess>
-#include <QtDebug>
 #include <functional>
 #include <QTextCodec>
 #include <QByteArray>
+#include <QFile>
+#include <QTextStream>
 #include "config.h"
 
 class Widget : public QWidget
@@ -70,7 +68,8 @@ private :
 
     QWidget *trainWidget ;
     QWidget *testWidget ;
-    QWebView *aboutWidget ;
+    //QWebView *aboutWidget ;
+    QTextBrowser *aboutWidget ;
     QStackedWidget *stackedWidget ;
 
     // Logic state

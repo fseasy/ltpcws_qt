@@ -11,7 +11,7 @@ Config::Config()
     if(!baseDir.exists())
     {
         baseDir.mkpath(baseDir.absolutePath()) ;
-        qDebug() << baseDir.absolutePath() ;
+        //qDebug() << baseDir.absolutePath() ;
     }
     basicTrainConfPath = baseDir.absolutePath() + "/" + "basic_train_conf.conf" ;
     basicTestConfPath = baseDir.absolutePath() + "/" + "basic_test_conf.conf" ;
@@ -52,10 +52,10 @@ Config::Config()
     }
     hasRightCwsExe = QFile::exists(basicCwsExePath) && QFile::exists(customCwsExePath) ;
 
-    qDebug() << (hasRightCwsExe ? QObject::tr("CWS程序准备就绪\n") : QObject::tr("CWS未找到\n"))
-             << basicCwsExePath <<"\n"
-             << customCwsExePath <<"\n"
-             << platform <<"\n" ;
+//    qDebug() << (hasRightCwsExe ? QObject::tr("CWS程序准备就绪\n") : QObject::tr("CWS未找到\n"))
+//             << basicCwsExePath <<"\n"
+//             << customCwsExePath <<"\n"
+//             << platform <<"\n" ;
 
     basicModeTrainIntro = QObject::tr("本模块用于训练基础模型（推荐使用上述LTP分词模型作为基础模型）。\n"
                                         "选择相应的路径，点击训练按钮即开始训练。"
@@ -75,7 +75,7 @@ bool Config::saveTrainConfigAndSetState(bool isCustomMode ,QString trainingSetPa
    QFile trainF(currentTrainConf) ;
    if(!trainF.open(QIODevice::WriteOnly | QIODevice::Text))
    {
-       qDebug() << "训练配置文件写入失败——找不到训练配置文件" ;
+       //qDebug() << "训练配置文件写入失败——找不到训练配置文件" ;
        return false ;
    }
    QTextStream out(&trainF) ;

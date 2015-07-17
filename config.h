@@ -5,7 +5,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
-#include <QtDebug>
+#include <QTextStream>
 #include <QMessageBox>
 class Config
 {

@@ -155,7 +155,7 @@ void Widget::createTrainWidget()
         bool confSavingState = config.saveTrainConfigAndSetState(isCustomMode , trainPathEditTrain->text() , trainPathEditDev->text() ,
                                trainPathEditModelSaving->text() , trainMaxIte->text() ,
                                trainPathEditBasicModel->text()) ;
-        qDebug() << ( confSavingState ? "trainning config saving ok" : "trainning config saving failed" );
+        //qDebug() << ( confSavingState ? "trainning config saving ok" : "trainning config saving failed" );
         if(!confSavingState)
         {
             QMessageBox::information(this , tr("内部错误") ,
@@ -175,7 +175,7 @@ void Widget::createTrainWidget()
         QProcess *trainProcess = new QProcess(this) ;
         connect(trainProcess , QProcess::started , [=]()
         {
-            qDebug() << "process started" ;
+            //qDebug() << "process started" ;
             trainBtn->setDisabled(true) ;
             // radio button should also be set disable
             for(const auto & radioBtn : trainModeBtnGroup->buttons()){ radioBtn->setDisabled(true) ;}
@@ -208,7 +208,7 @@ void Widget::createTrainWidget()
                     formatedLog.replace(QRegExp("\\[ERROR\\]") , redS + "[ERROR]" + redE) ;
                 }
                 formatedLog = formatedLog + enter ;
-                qDebug() << formatedLog ;
+                //qDebug() << formatedLog ;
                 trainEditLog->appendHtml(formatedLog);
             }
 
@@ -218,8 +218,8 @@ void Widget::createTrainWidget()
         {
             trainBtn->setEnabled(true) ;
             for(const auto & radioBtn : trainModeBtnGroup->buttons() ){ radioBtn->setEnabled(true) ;}
-            qDebug() << "exitCode" << exitCode
-                     << exitStatus ;
+            //qDebug() << "exitCode" << exitCode
+            //         << exitStatus ;
         }) ;
         trainProcess->start(config.getCurrentCwsExePath() , param) ;
 
@@ -411,7 +411,7 @@ void Widget::createTestWidget()
         {
             cwsBtn->setEnabled(true) ;
             for(const auto &radioBtn : modelConfBtnGroup->buttons()){radioBtn->setEnabled(true) ;}
-            qDebug() << exitCode << status ;
+            //qDebug() << exitCode << status ;
         }) ;
         connect(predictProcess , QProcess::readyReadStandardOutput , [=]()
         {
@@ -433,9 +433,21 @@ void Widget::createTestWidget()
 
 void Widget::createAboutWidget()
 {
-    aboutWidget = new QWebView(this) ;
-    aboutWidget->load(QUrl("qrc:/res/html/about.htm")) ;
-    aboutWidget->show() ;
+//    aboutWidget = new QWebView(this) ;
+//    aboutWidget->load(QUrl("qrc:/res/html/about.htm")) ;
+//    aboutWidget->show() ;
+    aboutWidget = new QTextBrowser() ;
+    aboutWidget->setReadOnly(true) ;
+    aboutWidget->setOpenExternalLinks(true) ;
+    aboutWidget->setStyleSheet("border:0") ;
+    QFile fi(":/res/html/about.htm") ;
+    if(fi.open(QFile::ReadOnly | QFile::Text))
+    {
+        QString content = fi.readAll() ;
+        fi.close() ;
+        aboutWidget->setHtml(content) ;
+    }
+
 }
 void Widget::LoadWidgetStyle()
 {
@@ -444,12 +456,12 @@ void Widget::LoadWidgetStyle()
     {
         QString styleStr = styleF.readAll() ;
         setStyleSheet(styleStr) ;
-        qDebug() << styleStr ;
+        // qDebug() << styleStr ;
         styleF.close() ;
     }
     else
     {
-        qDebug() << "failed to load Style" ;
+        //qDebug() << "failed to load Style" ;
     }
 }
 
