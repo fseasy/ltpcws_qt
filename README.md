@@ -22,14 +22,14 @@
 
 #####训练
 
-[!训练](screenshot/train.jpg)
+![训练](screenshot/train.jpg)
 
 #####分词预测
 
-[!分词预测](screenshot/predict.jpg)
+![分词预测](screenshot/predict.jpg)
 
 #####关于
 
-[!关于](screenshot/about.jpg)
+![关于](screenshot/about.jpg)
 
 
