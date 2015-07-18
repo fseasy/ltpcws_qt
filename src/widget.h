@@ -78,6 +78,9 @@ private :
     Config config ;
     TrainMode trainMode ;
     PredictMode predictMode ;
+    /// Because Tab('\t') display in QPlainText in variant width , we replace it to 4 space , and replace
+    /// reverse when need to be stored
+    QString TAB_REPLACE_STR="    " ;
 
 public slots :
 

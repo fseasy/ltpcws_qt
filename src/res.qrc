@@ -5,5 +5,6 @@
         <file>res/images/about.png</file>
         <file>res/html/about.htm</file>
         <file>res/html/widget.css</file>
+        <file>res/images/ltpcws.ico</file>
     </qresource>
 </RCC>

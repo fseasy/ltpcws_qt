@@ -6,22 +6,23 @@ Config::Config()
     //QString exePath = QDir::currentPath() ;
 
     // Config init
-    QString dirName = "conf" ;
-    baseDir = QDir(exePath + "/" + dirName) ; // Always use '/' as separator
-    if(!baseDir.exists())
+    QString dirName = "LTPCWS_conf" ;
+    //confBaseDir = QDir(exePath + "/" + dirName) ; // Always use '/' as separator
+    confBaseDir =  QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + "/" + dirName ;
+    if(!confBaseDir.exists())
     {
-        baseDir.mkpath(baseDir.absolutePath()) ;
+        confBaseDir.mkpath(confBaseDir.absolutePath()) ;
         //qDebug() << baseDir.absolutePath() ;
     }
-    basicTrainConfPath = baseDir.absolutePath() + "/" + "basic_train_conf.conf" ;
-    basicTestConfPath = baseDir.absolutePath() + "/" + "basic_test_conf.conf" ;
-    customTrainConfPath = baseDir.absolutePath() + "/" + "custom_train_conf.conf" ;
-    customTestConfPath = baseDir.absolutePath() + "/" + "custom_test_conf.conf" ;
-    predictInputTmpFilePath = baseDir.absolutePath() + "/" + "predictinput.tmp" ;
+    basicTrainConfPath = confBaseDir.absolutePath() + "/" + "basic_train_conf.conf" ;
+    basicTestConfPath = confBaseDir.absolutePath() + "/" + "basic_test_conf.conf" ;
+    customTrainConfPath = confBaseDir.absolutePath() + "/" + "custom_train_conf.conf" ;
+    customTestConfPath = confBaseDir.absolutePath() + "/" + "custom_test_conf.conf" ;
+    predictInputTmpFilePath = confBaseDir.absolutePath() + "/" + "predictinput.tmp" ;
     // ltp-cws Exe Path Conf
 
     QString cwsExeDir = exePath + "/" + "cws_bin" ;
-    if(!baseDir.exists(cwsExeDir))
+    if(!confBaseDir.exists(cwsExeDir))
     {
         hasRightCwsExe = false ;
     }
@@ -79,7 +80,7 @@ bool Config::saveTrainConfigAndSetState(bool isCustomMode ,QString trainingSetPa
        return false ;
    }
    QTextStream out(&trainF) ;
-   out.setCodec("utf8") ;
+   //out.setCodec("utf8") ; /// this will cause the limit that  can't read Chinese in Windows where default code is GB18030
    out << "[train]" << "\n"
           << "train-file = " << trainingSetPath <<"\n"
           << "holdout-file = " << devingSetPath <<"\n"
@@ -109,7 +110,7 @@ bool Config::loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QStri
         return false ;
     }
     QTextStream in(&rf) ;
-    in.setCodec("utf8") ;
+    //in.setCodec("utf8") ;
     while(!in.atEnd())
     {
         QString line = in.readLine().trimmed() ;
@@ -149,7 +150,7 @@ bool Config::savePredictConfigAndSetState(bool isCustomMode ,QString basicModelP
         return false ;
     }
     QTextStream fos(&fo) ;
-    fos.setCodec("utf8") ;
+    //fos.setCodec("utf8") ;
     fos <<"[test]" <<"\n"
         <<"test-file = " << predictInputTmpFilePath <<"\n" ;
     if(isCustomMode)
@@ -173,7 +174,7 @@ bool Config::loadPredictConfig(bool isCustomMode , QString &basicModelPath , QSt
         return false ;
     }
     QTextStream fis(&fi) ;
-    fis.setCodec("utf8") ;
+    //fis.setCodec("utf8") ;
     while(!fis.atEnd())
     {
         QString line = fis.readLine().trimmed() ;
@@ -222,4 +223,11 @@ QString Config::getCurrentPredictConf()
 QString Config::getCurrentCwsExePath()
 {
     return currentCwsExePath ;
+}
+
+QString Config::getConfInfo()
+{
+    QStringList confPaths ;
+    confPaths << basicTrainConfPath << customTrainConfPath << basicTestConfPath << customTestConfPath ;
+    return confPaths.join("\n") ;
 }

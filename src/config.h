@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QStandardPaths>
 class Config
 {
    public :
@@ -28,8 +29,9 @@ class Config
     QString getCurrentTrainConf() ;
     QString getCurrentPredictConf() ;
     QString getCurrentCwsExePath() ;
+    QString getConfInfo() ;
 private :
-    QDir baseDir ;
+    QDir confBaseDir ;
 
     QString basicTrainConfPath ;
     QString basicTestConfPath ;

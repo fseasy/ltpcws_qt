@@ -30,8 +30,9 @@ Widget::Widget(QWidget *parent)
 
     // style sheet
     LoadWidgetStyle() ;
-
-    resize(700,450) ;
+    setWindowIcon(QIcon(":/res/images/ltpcws.ico")) ;
+    setWindowTitle(tr("LTP分词版(LTP-CWS)")) ;
+    resize(800,450) ;
 
 }
 void Widget::createLeftBox()
@@ -162,8 +163,9 @@ void Widget::createTrainWidget()
                                      tr("内部训练配置文件写入错误！")) ;
             return ;
         }
-
+        ///QMessageBox::information(this , "path" , config.getConfInfo()) ;
         // Start Train
+        trainEditLog->clear() ;
         if(!config.getCwsExeState())
         {
             QMessageBox::information(this , tr("内部错误") ,
@@ -288,7 +290,7 @@ void Widget::createTestWidget()
     inputBox->setLayout(inputLayout) ;
     QPlainTextEdit * inputEditor = new QPlainTextEdit() ;
     inputEditor->setFont(QFont("Microsoft YaHei" , 10)) ;
-    QPushButton *loadFileBtn = new QPushButton(tr("从文件中加载")) ;
+    QPushButton *loadFileBtn = new QPushButton(tr("从文件中加载(UTF8编码)")) ;
     QPushButton *clearBtn = new QPushButton(tr("清除输入")) ;
     QPushButton *cwsBtn = new QPushButton(tr("分词")) ;
     inputLayout->addWidget(inputEditor , 0 , 0 , 5 , 6) ;
@@ -328,7 +330,7 @@ void Widget::createTestWidget()
     QPlainTextEdit *displayRstEditor = new QPlainTextEdit() ;
     displayRstEditor->setReadOnly(true) ;
     displayRstEditor->setWordWrapMode(QTextOption::NoWrap) ;
-    displayRstEditor->setTabStopWidth(40) ; // '\t' width
+    //displayRstEditor->setTabStopWidth(40) ; // '\t' width
     displayRstEditor->setFont(QFont("Microsoft YaHei",10)) ;
     QCheckBox *isWordWrapBtn = new QCheckBox(tr("自动换行")) ;
     QPushButton *saveBtn = new QPushButton(tr("保存到文件")) ;
@@ -365,7 +367,7 @@ void Widget::createTestWidget()
         }
         QTextStream fos(&fo) ;
         fos.setCodec("utf8") ;
-        fos << displayRstEditor->toPlainText() ;
+        fos << displayRstEditor->toPlainText().replace(TAB_REPLACE_STR , "\t") ;
     }) ;
 
     // LTP_CWS predict process
@@ -390,6 +392,7 @@ void Widget::createTestWidget()
                                      tr("配置文件保存失败")) ;
             return ;
         }
+        displayRstEditor->clear() ;
         QString inputContent = inputEditor->toPlainText() ;
         saveState = config.savePredictInputContent(inputContent) ;
         if(!saveState)
@@ -417,6 +420,7 @@ void Widget::createTestWidget()
         {
             QString readedCont = predictProcess->readAllStandardOutput() ;
             //displayRstEditor->appendPlainText(readedCont) ;
+            readedCont.replace("\t",TAB_REPLACE_STR) ;
             displayRstEditor->insertPlainText(readedCont) ;
         }) ;
         QStringList params ;
@@ -583,6 +587,8 @@ bool Widget::checkWritePathValid(QString path)
     if(fo.open(QFile::WriteOnly))
     {
         fo.close() ;
+        (new QDir())->remove(path) ;
+
         return true ;
     }
     else { return false ;}
