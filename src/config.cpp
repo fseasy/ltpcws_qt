@@ -22,42 +22,30 @@ Config::Config()
     // ltp-cws Exe Path Conf
 
     QString cwsExeDir = exePath + "/" + "cws_bin" ;
-    if(!confBaseDir.exists(cwsExeDir))
-    {
-        hasRightCwsExe = false ;
-    }
-    else
-    {
-        hasRightCwsExe = true ;
-    }
     getPlatform(platform) ;
     if(platform == P_WIN32)
     {
-        basicCwsExePath = cwsExeDir + "/win32/" + "otcws.exe" ;
-        customCwsExePath = cwsExeDir + "/win32/" + "otcws-customized.exe" ;
+        cwsExePath = cwsExeDir + "/win32/" + "otcws.exe" ;
     }
     else if(platform == P_LINUX32)
     {
-        basicCwsExePath = cwsExeDir + "/linux32/" + "otcws" ;
-        customCwsExePath = cwsExeDir + "/linux32/" + "otcws-customized" ;
+        cwsExePath = cwsExeDir + "/linux32/" + "otcws" ;
     }
     else if(platform == P_OSX)
     {
-        basicCwsExePath = cwsExeDir + "/osx/" + "otcws" ;
-        customCwsExePath= cwsExeDir + "/osx/" + "otcws-customized" ;
+        cwsExePath = cwsExeDir + "/osx/" + "otcws" ;
     }
     else
     {
-        basicCwsExePath = cwsExeDir + "/others/" + "otcws" ;
-        customCwsExePath = cwsExeDir + "/others/" + "otcws-customized" ;
+        cwsExePath = cwsExeDir + "/others/" + "otcws" ;
     }
-    hasRightCwsExe = QFile::exists(basicCwsExePath) && QFile::exists(customCwsExePath) ;
+    hasRightCwsExe = QFile::exists(cwsExePath) ;
 
-//    qDebug() << (hasRightCwsExe ? QObject::tr("CWS程序准备就绪\n") : QObject::tr("CWS未找到\n"))
-//             << basicCwsExePath <<"\n"
-//             << customCwsExePath <<"\n"
-//             << platform <<"\n" ;
-
+#ifdef DEBUG
+    qDebug() << (hasRightCwsExe ? QObject::tr("CWS程序准备就绪\n") : QObject::tr("CWS未找到\n"))
+             << cwsExePath <<"\n"
+             << platform <<"\n" ;
+#endif
     basicModeTrainIntro = QObject::tr("本模块用于训练基础模型（推荐使用上述LTP分词模型作为基础模型）。\n"
                                         "选择相应的路径，点击训练按钮即开始训练。"
                                         "训练一般耗时较长，请耐心等待。" );
@@ -69,10 +57,10 @@ Config::Config()
     customModePredictIntro = QObject::tr("使用个性化模型对输入文本做分词处理") ;
 }
 
-bool Config::saveTrainConfigAndSetState(bool isCustomMode ,QString trainingSetPath ,QString devingSetPath ,
+bool Config::saveTrainConfig(bool isCustomMode ,QString trainingSetPath ,QString devingSetPath ,
                              QString modelSavingPath , QString max_ite ,QString basicModelPath)
 {
-   currentTrainConf = isCustomMode ? customTrainConfPath : basicTrainConfPath ;
+   QString currentTrainConf = isCustomMode ? customTrainConfPath : basicTrainConfPath ;
    QFile trainF(currentTrainConf) ;
    if(!trainF.open(QIODevice::WriteOnly | QIODevice::Text))
    {
@@ -82,22 +70,16 @@ bool Config::saveTrainConfigAndSetState(bool isCustomMode ,QString trainingSetPa
    QTextStream out(&trainF) ;
    //out.setCodec("utf8") ; /// this will cause the limit that  can't read Chinese in Windows where default code is GB18030
    out << "[train]" << "\n"
-          << "train-file = " << trainingSetPath <<"\n"
-          << "holdout-file = " << devingSetPath <<"\n"
+          << "reference = " << trainingSetPath <<"\n"
+          << "development = " << devingSetPath <<"\n"
           << "algorithm = pa" <<"\n"
-          << "enable-incremental-training = 1" <<"\n"
           << "max-iter = " << max_ite <<"\n"
-          << "rare-feature-threshold = 0" <<"\n" ;
+          << "rare-feature-threshold = 0" <<"\n"
+          << "model = " << modelSavingPath << "\n" ;
    if(isCustomMode)
    {
-       out << "baseline-model-file = " << basicModelPath << "\n"
-           << "customized-model-name = " << modelSavingPath <<"\n" ;
+       out << "baseline-model = " << basicModelPath << "\n" ;
    }
-   else
-   {
-       out << "model-name = " << modelSavingPath << "\n" ;
-   }
-   currentCwsExePath = isCustomMode ? customCwsExePath : basicCwsExePath ;
    return true ;
 }
 bool Config::loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QString & devingSetPath ,
@@ -118,13 +100,13 @@ bool Config::loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QStri
         if(parts.length() != 2) continue ;
         QString key = parts[0] ;
         QString val = parts[1] ;
-        if(key == "train-file") trainingSetPath = val ;
-        else if(key == "holdout-file") devingSetPath = val ;
+        if(key == "reference") trainingSetPath = val ;
+        else if(key == "development") devingSetPath = val ;
         else if(key == "max-iter") max_ite = val ;
-        else if(key == "baseline-model-file") basicModelPath = val ;
-        else if(key == "customized-model-name") modelSavingPath = val ;
-        else if(key == "model-name") {modelSavingPath = val ; basicModelPath = "" ;} // Means it is basicTrainMode
+        else if(key == "baseline-model") basicModelPath = val ;
+        else if(key == "model") {modelSavingPath = val ;}
     }
+    if(! isCustomMode) basicModelPath = "" ;
     return true ;
 }
 bool Config::savePredictInputContent(QString &content)
@@ -140,10 +122,10 @@ bool Config::savePredictInputContent(QString &content)
     return true ;
 }
 
-bool Config::savePredictConfigAndSetState(bool isCustomMode ,QString basicModelPath ,
+bool Config::savePredictConfig(bool isCustomMode ,QString basicModelPath ,
                                           QString customModelPath)
 {
-    currentPredictConf = isCustomMode ? customTestConfPath : basicTestConfPath ;
+    QString currentPredictConf = isCustomMode ? customTestConfPath : basicTestConfPath ;
     QFile fo(currentPredictConf) ;
     if(!fo.open(QFile::WriteOnly | QFile::Text))
     {
@@ -151,18 +133,16 @@ bool Config::savePredictConfigAndSetState(bool isCustomMode ,QString basicModelP
     }
     QTextStream fos(&fo) ;
     //fos.setCodec("utf8") ;
-    fos <<"[test]" <<"\n"
-        <<"test-file = " << predictInputTmpFilePath <<"\n" ;
+    fos <<"[test]" <<"\n" ;
     if(isCustomMode)
     {
-       fos <<"customized-model-file = " << customModelPath << "\n"
-           <<"baseline-model-file = " << basicModelPath <<"\n" ;
+       fos <<"model = " << customModelPath << "\n"
+           <<"baseline-model = " << basicModelPath <<"\n" ;
     }
     else
     {
-       fos <<"model-file = " <<basicModelPath <<"\n" ;
+       fos <<"model = " <<basicModelPath <<"\n" ;
     }
-    currentCwsExePath = isCustomMode ? customCwsExePath :  basicCwsExePath ;
     return true ;
 }
 bool Config::loadPredictConfig(bool isCustomMode , QString &basicModelPath , QString &customModelPath)
@@ -182,13 +162,14 @@ bool Config::loadPredictConfig(bool isCustomMode , QString &basicModelPath , QSt
         if(parts.length() != 2) continue ;
         QString key = parts[0] ;
         QString val = parts[1] ;
-        if(key == "model-file")
+        if(key == "model")
         {
             basicModelPath = val ;
             customModelPath = "" ;
+            if(isCustomMode) customModelPath = val ;
+            else { basicModelPath = val ; customModelPath = "" ;}
         }
-        else if(key == "customized-model-file"){ customModelPath = val ;}
-        else if(key == "baseline-model-file"){ basicModelPath = val ;}
+        else if(key == "baseline-model"){ basicModelPath = val ;}
     }
     return true ;
 }
@@ -210,19 +191,53 @@ bool Config::getCwsExeState()
     return hasRightCwsExe ;
 }
 
-QString Config::getCurrentTrainConf()
+bool Config::getTrainParams(bool isCustomMode , QStringList &params)
 {
-    return currentTrainConf ;
+    QString reference , development , modelSavingPath , max_ite , basicModelPath ;
+    bool loadState ;
+    loadState = loadTrainConfig(isCustomMode , reference , development ,
+                                modelSavingPath , max_ite , basicModelPath) ;
+    if(isCustomMode)
+    {
+        params <<"customized-learn"
+               << "--baseline-model" << basicModelPath ;
+    }
+    else
+    {
+        params << "learn" ;
+
+    }
+    params << "--model" << modelSavingPath
+           << "--reference" << reference
+           << "--development" << development
+           << "--max-iter" << max_ite ;
+
+    return loadState ;
 }
 
-QString Config::getCurrentPredictConf()
+bool Config::getPredictParams(bool isCustomMode , QStringList &params)
 {
-    return currentPredictConf ;
+    QString basicModelPath , customModelPath ;
+    bool loadState ;
+    loadState = loadPredictConfig(isCustomMode , basicModelPath , customModelPath) ;
+    if(isCustomMode)
+    {
+        params << "customized-test"
+               << "--model" << customModelPath
+               << "--baseline-model" << basicModelPath ;
+    }
+    else
+    {
+        params << "test"
+               << "--model" << basicModelPath ;
+    }
+    params << "--input" << predictInputTmpFilePath ;
+    return loadState ;
 }
 
-QString Config::getCurrentCwsExePath()
+QString Config::getCwsExePath()
 {
-    return currentCwsExePath ;
+    return cwsExePath ;
 }
 
 QString Config::getConfInfo()

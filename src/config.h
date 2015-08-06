@@ -8,6 +8,12 @@
 #include <QTextStream>
 #include <QMessageBox>
 #include <QStandardPaths>
+
+#define DEBUG
+
+#ifdef DEBUG
+#include <QDebug>
+#endif
 class Config
 {
    public :
@@ -17,18 +23,18 @@ class Config
     QString customModeTrainIntro ;
     QString basicModePredictIntro ;
     QString customModePredictIntro ;
-    bool saveTrainConfigAndSetState(bool isCustomMode ,QString trainingSetPath ,QString devingSetPath ,
+    bool saveTrainConfig(bool isCustomMode ,QString trainingSetPath ,QString devingSetPath ,
                          QString modelSavingPath , QString max_ite ,QString basicModelPath)  ;
     bool loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QString & devingSetPath ,
                          QString & modelSavingPath , QString & max_ite ,QString & basicModelPath) ;
-    bool savePredictConfigAndSetState(bool isCustomMode ,QString basicModelPath , QString customModelPath) ;
+    bool savePredictConfig(bool isCustomMode ,QString basicModelPath , QString customModelPath) ;
     bool loadPredictConfig(bool isCustomMode , QString &basicModelPath , QString &customModelPath) ;
     bool savePredictInputContent(QString &content) ;
     void getPlatform(Platform &curPlatform ) ;
     bool getCwsExeState() ;
-    QString getCurrentTrainConf() ;
-    QString getCurrentPredictConf() ;
-    QString getCurrentCwsExePath() ;
+    bool getTrainParams(bool isCustomMode , QStringList & params) ;
+    bool getPredictParams(bool isCustomMode , QStringList &params)  ;
+    QString getCwsExePath() ;
     QString getConfInfo() ;
 private :
     QDir confBaseDir ;
@@ -39,15 +45,11 @@ private :
     QString customTestConfPath ;
     QString predictInputTmpFilePath ;
 
-    QString currentTrainConf ;
-    QString currentPredictConf ;
 
     Platform platform ;
 
     bool hasRightCwsExe ;
-    QString basicCwsExePath ;
-    QString customCwsExePath ;
-    QString currentCwsExePath ;
+    QString cwsExePath ;
 } ;
 #endif // CONFIG_H
 

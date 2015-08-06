@@ -153,7 +153,7 @@ void Widget::createTrainWidget()
                                      tr("路径检查错误！请检查路径配置是否正确。然后重新点击按钮。")) ;
             return ;
         }
-        bool confSavingState = config.saveTrainConfigAndSetState(isCustomMode , trainPathEditTrain->text() , trainPathEditDev->text() ,
+        bool confSavingState = config.saveTrainConfig(isCustomMode , trainPathEditTrain->text() , trainPathEditDev->text() ,
                                trainPathEditModelSaving->text() , trainMaxIte->text() ,
                                trainPathEditBasicModel->text()) ;
         //qDebug() << ( confSavingState ? "trainning config saving ok" : "trainning config saving failed" );
@@ -172,8 +172,8 @@ void Widget::createTrainWidget()
                                      tr("未找到适合该操作系统的分词程序\n请下载源代码编译后放在cws_bin/others目录下")) ;
             return ;
         }
-        QStringList param ;
-        param << config.getCurrentTrainConf() ;
+        QStringList params ;
+        config.getTrainParams(isCustomMode,params) ;
         QProcess *trainProcess = new QProcess(this) ;
         connect(trainProcess , QProcess::started , [=]()
         {
@@ -187,7 +187,7 @@ void Widget::createTrainWidget()
             // format log for display
             QString readedLog =  trainProcess->readAllStandardError().trimmed() ;
             QString separator = "__" ;
-            readedLog.replace(QRegExp("(\\[TRACE\\]|\\[ERROR\\])"),separator + "\\1") ;
+            readedLog.replace(QRegExp("(\\[TRACE\\]|\\[ERROR\\]|\\[INFO\\])"),separator + "\\1") ;
             QStringList logs = readedLog.split(separator , QString::SkipEmptyParts) ;
 
             QString strongS = "<b>" , strongE = "</b>" ;
@@ -223,7 +223,7 @@ void Widget::createTrainWidget()
             //qDebug() << "exitCode" << exitCode
             //         << exitStatus ;
         }) ;
-        trainProcess->start(config.getCurrentCwsExePath() , param) ;
+        trainProcess->start(config.getCwsExePath() , params) ;
 
 
     }) ;
@@ -385,7 +385,7 @@ void Widget::createTestWidget()
                                      tr("模型路径不存在！请重新设置路径然后重新点击按钮!")) ;
             return ;
         }
-        bool saveState = config.savePredictConfigAndSetState(isCustomMode,basicModelPath,customModelPath) ;
+        bool saveState = config.savePredictConfig(isCustomMode,basicModelPath,customModelPath) ;
         if(!saveState)
         {
             QMessageBox::information(this , tr("内部错误") ,
@@ -423,9 +423,19 @@ void Widget::createTestWidget()
             readedCont.replace("\t",TAB_REPLACE_STR) ;
             displayRstEditor->insertPlainText(readedCont) ;
         }) ;
+#ifdef DEBUG
+        connect(predictProcess , QProcess::readyReadStandardError , [=]()
+        {
+            QString readedCont = predictProcess->readAllStandardError() ;
+            qDebug() << readedCont ;
+        }) ;
+#endif
         QStringList params ;
-        params << config.getCurrentPredictConf() ;
-        predictProcess->start(config.getCurrentCwsExePath() , params) ;
+        config.getPredictParams(isCustomMode , params) ;
+#ifdef DEBUG
+        qDebug() << params ;
+#endif
+        predictProcess->start(config.getCwsExePath() , params) ;
 
     });
 
