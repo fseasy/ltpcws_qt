@@ -65,6 +65,7 @@ private :
 
     QLineEdit *testPathEditBasicModel ;
     QLineEdit *testPathEditCustomModel ;
+    QLineEdit *lexiconPathEdit ;
 
     QWidget *trainWidget ;
     QWidget *testWidget ;

@@ -250,11 +250,13 @@ void Widget::createTestWidget()
     modeInfo->setWordWrap(true) ;
     QGridLayout *basicModelPathView = createPathSelectView(tr("基础模型路径") , testPathEditBasicModel) ;
     QGridLayout *customModelPathView = createPathSelectView(tr("个性化模型路径") , testPathEditCustomModel) ;
+    QGridLayout *lexiconPathView = createPathSelectView(tr("词典文件(可选)") , lexiconPathEdit) ;
     modelConfLayout->addWidget(basicModelRadio,0,0) ;
     modelConfLayout->addWidget(customModelRadio , 0, 1) ;
     modelConfLayout->addWidget(modeInfo , 1, 0 , 2 ,2 ) ;
     modelConfLayout->addLayout(basicModelPathView , 3,0,1,2) ;
     modelConfLayout->addLayout(customModelPathView ,4,0,1,2) ;
+    modelConfLayout->addLayout(lexiconPathView , 5 , 0 , 1 ,2 ) ;
     testLayout->addWidget(modelConfBox , 0 , 0 , 6 , 6) ;
     // Logic
     QButtonGroup *modelConfBtnGroup = new QButtonGroup() ;
@@ -376,8 +378,10 @@ void Widget::createTestWidget()
         bool isCustomMode = (predictMode == CustomPredictMode) ;
         QString basicModelPath = testPathEditBasicModel->text() ;
         QString customModelPath = testPathEditCustomModel->text() ;
+        QString lexiconPath = lexiconPathEdit->text() ;
         // check Model path
         bool checkModelPathState = checkReadPathValid(basicModelPath) ;
+        lexiconPath = checkReadPathValid(lexiconPath) ? lexiconPath : "" ;
         if(isCustomMode){checkModelPathState = checkModelPathState && checkReadPathValid(customModelPath) ;}
         if(!checkModelPathState)
         {
@@ -385,7 +389,7 @@ void Widget::createTestWidget()
                                      tr("模型路径不存在！请重新设置路径然后重新点击按钮!")) ;
             return ;
         }
-        bool saveState = config.savePredictConfig(isCustomMode,basicModelPath,customModelPath) ;
+        bool saveState = config.savePredictConfig(isCustomMode,basicModelPath,customModelPath,lexiconPath) ;
         if(!saveState)
         {
             QMessageBox::information(this , tr("内部错误") ,
@@ -410,11 +414,10 @@ void Widget::createTestWidget()
             for(const auto & radioBtn : modelConfBtnGroup->buttons()){radioBtn->setEnabled(false) ;}
         }) ;
         connect(predictProcess , static_cast<void(QProcess::*)(int , QProcess::ExitStatus)>(&QProcess::finished) ,
-                [=](int exitCode , QProcess::ExitStatus status)
+                [=]()
         {
             cwsBtn->setEnabled(true) ;
             for(const auto &radioBtn : modelConfBtnGroup->buttons()){radioBtn->setEnabled(true) ;}
-            //qDebug() << exitCode << status ;
         }) ;
         connect(predictProcess , QProcess::readyReadStandardOutput , [=]()
         {
@@ -568,14 +571,15 @@ void Widget::preSetAllTrainPathSelectViews()
 }
 void ::Widget::preSetAllPredictPathSelectViews()
 {
-    QString basicModelPath , customModelPath ;
+    QString basicModelPath , customModelPath , lexiconPath ;
     bool isCustomMode = (predictMode == CustomPredictMode) ;
-    bool loadState = config.loadPredictConfig(isCustomMode , basicModelPath , customModelPath) ;
+    bool loadState = config.loadPredictConfig(isCustomMode , basicModelPath , customModelPath , lexiconPath) ;
     if(loadState == true)
     {
         testPathEditBasicModel->setText(basicModelPath) ;
         if(isCustomMode){testPathEditCustomModel->setText(customModelPath) ;}
         else {testPathEditCustomModel->clear() ;}
+        lexiconPathEdit->setText(lexiconPath) ;
     }
 }
 

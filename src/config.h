@@ -9,7 +9,7 @@
 #include <QMessageBox>
 #include <QStandardPaths>
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #include <QDebug>
@@ -27,8 +27,10 @@ class Config
                          QString modelSavingPath , QString max_ite ,QString basicModelPath)  ;
     bool loadTrainConfig(bool isCustomMode ,QString & trainingSetPath ,QString & devingSetPath ,
                          QString & modelSavingPath , QString & max_ite ,QString & basicModelPath) ;
-    bool savePredictConfig(bool isCustomMode ,QString basicModelPath , QString customModelPath) ;
-    bool loadPredictConfig(bool isCustomMode , QString &basicModelPath , QString &customModelPath) ;
+    bool savePredictConfig(bool isCustomMode ,QString basicModelPath , QString customModelPath ,
+                           QString lexiconPath) ;
+    bool loadPredictConfig(bool isCustomMode , QString &basicModelPath , QString &customModelPath ,
+                           QString &lexiconPath) ;
     bool savePredictInputContent(QString &content) ;
     void getPlatform(Platform &curPlatform ) ;
     bool getCwsExeState() ;

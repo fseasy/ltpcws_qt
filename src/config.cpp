@@ -123,7 +123,7 @@ bool Config::savePredictInputContent(QString &content)
 }
 
 bool Config::savePredictConfig(bool isCustomMode ,QString basicModelPath ,
-                                          QString customModelPath)
+                               QString customModelPath , QString lexiconPath)
 {
     QString currentPredictConf = isCustomMode ? customTestConfPath : basicTestConfPath ;
     QFile fo(currentPredictConf) ;
@@ -134,6 +134,7 @@ bool Config::savePredictConfig(bool isCustomMode ,QString basicModelPath ,
     QTextStream fos(&fo) ;
     //fos.setCodec("utf8") ;
     fos <<"[test]" <<"\n" ;
+    fos <<"lexicon = " << lexiconPath ;
     if(isCustomMode)
     {
        fos <<"model = " << customModelPath << "\n"
@@ -145,7 +146,8 @@ bool Config::savePredictConfig(bool isCustomMode ,QString basicModelPath ,
     }
     return true ;
 }
-bool Config::loadPredictConfig(bool isCustomMode , QString &basicModelPath , QString &customModelPath)
+bool Config::loadPredictConfig(bool isCustomMode , QString &basicModelPath , QString &customModelPath ,
+                               QString &lexiconPath)
 {
     QString currentConf = isCustomMode ? customTestConfPath : basicTestConfPath ;
     QFile fi(currentConf) ;
@@ -170,6 +172,7 @@ bool Config::loadPredictConfig(bool isCustomMode , QString &basicModelPath , QSt
             else { basicModelPath = val ; customModelPath = "" ;}
         }
         else if(key == "baseline-model"){ basicModelPath = val ;}
+        else if(key == "lexicon") {lexiconPath = val ;}
     }
     return true ;
 }
@@ -210,16 +213,18 @@ bool Config::getTrainParams(bool isCustomMode , QStringList &params)
     params << "--model" << modelSavingPath
            << "--reference" << reference
            << "--development" << development
-           << "--max-iter" << max_ite ;
+           << "--max-iter" << max_ite
+           << "--rare-feature-threshold" <<  0
+           << "--algorithm" << "ap" ;
 
     return loadState ;
 }
 
 bool Config::getPredictParams(bool isCustomMode , QStringList &params)
 {
-    QString basicModelPath , customModelPath ;
+    QString basicModelPath , customModelPath , lexiconPath ;
     bool loadState ;
-    loadState = loadPredictConfig(isCustomMode , basicModelPath , customModelPath) ;
+    loadState = loadPredictConfig(isCustomMode , basicModelPath , customModelPath , lexiconPath) ;
     if(isCustomMode)
     {
         params << "customized-test"
@@ -232,6 +237,11 @@ bool Config::getPredictParams(bool isCustomMode , QStringList &params)
                << "--model" << basicModelPath ;
     }
     params << "--input" << predictInputTmpFilePath ;
+    // check wheather lexicon path is valid
+    if( lexiconPath != "" && QFile::exists(lexiconPath))
+    {
+        params << "--lexicon" << lexiconPath ;
+    }
     return loadState ;
 }
 
