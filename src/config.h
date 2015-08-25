@@ -9,7 +9,7 @@
 #include <QMessageBox>
 #include <QStandardPaths>
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #include <QDebug>

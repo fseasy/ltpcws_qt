@@ -214,7 +214,7 @@ bool Config::getTrainParams(bool isCustomMode , QStringList &params)
            << "--reference" << reference
            << "--development" << development
            << "--max-iter" << max_ite
-           << "--rare-feature-threshold" <<  0
+           << "--rare-feature-threshold" <<  "0"
            << "--algorithm" << "ap" ;
 
     return loadState ;

@@ -177,7 +177,10 @@ void Widget::createTrainWidget()
         QProcess *trainProcess = new QProcess(this) ;
         connect(trainProcess , QProcess::started , [=]()
         {
-            //qDebug() << "process started" ;
+#ifdef DEBUG
+            qDebug() << "process started" ;
+            qDebug() << params.join(" ") ;
+#endif
             trainBtn->setDisabled(true) ;
             // radio button should also be set disable
             for(const auto & radioBtn : trainModeBtnGroup->buttons()){ radioBtn->setDisabled(true) ;}
